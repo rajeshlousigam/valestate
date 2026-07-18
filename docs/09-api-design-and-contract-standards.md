@@ -1,6 +1,6 @@
 # Document 09 — API Design & Contract Standards
 
-**Project Codename:** HousePoint
+**Project Codename:** ValEstate
 **Document Owner:** Backend Architect
 **Status:** DRAFT · **Version:** 0.1.0 · **Last Updated:** 2026-07-18
 **Parents:** *Doc 03, 04, 05, 08*

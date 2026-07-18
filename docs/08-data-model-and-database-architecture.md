@@ -1,6 +1,6 @@
 # Document 08 — Data Model & Database Architecture
 
-**Project Codename:** HousePoint
+**Project Codename:** ValEstate
 **Document Owner:** Database Architect
 **Status:** DRAFT · **Version:** 0.1.0 · **Last Updated:** 2026-07-18
 **Parents:** *Doc 04, 05, 07*

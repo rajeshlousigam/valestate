@@ -1,6 +1,6 @@
 # Document 03 — Personas, User Roles & RBAC Matrix
 
-**Project Codename:** HousePoint
+**Project Codename:** ValEstate
 **Document Owner:** Product / UX / Security
 **Status:** DRAFT
 **Version:** 0.1.0

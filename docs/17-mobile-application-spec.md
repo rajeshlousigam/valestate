@@ -1,6 +1,6 @@
 # Document 17 — Mobile Application Spec (React Native)
 
-**Project Codename:** HousePoint
+**Project Codename:** ValEstate
 **Document Owner:** UX / Mobile
 **Status:** DRAFT · **Version:** 0.1.0 · **Last Updated:** 2026-07-18
 **Parents:** *Doc 06, 09, 16*

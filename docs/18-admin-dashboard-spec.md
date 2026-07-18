@@ -1,6 +1,6 @@
 # Document 18 — Admin Dashboard Spec (Yii2)
 
-**Project Codename:** HousePoint
+**Project Codename:** ValEstate
 **Document Owner:** Product / Ops
 **Status:** DRAFT · **Version:** 0.1.0 · **Last Updated:** 2026-07-18
 **Parents:** *Doc 03, 07, 12, 09*

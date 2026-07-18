@@ -1,6 +1,6 @@
 # Document 10 — Authentication, Authorization & Security
 
-**Project Codename:** HousePoint
+**Project Codename:** ValEstate
 **Document Owner:** Security Consultant
 **Status:** DRAFT · **Version:** 0.1.0 · **Last Updated:** 2026-07-18
 **Parents:** *Doc 03, 05, 08, 09*

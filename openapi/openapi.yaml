@@ -1,6 +1,6 @@
 openapi: 3.1.0
 info:
-  title: HousePoint API
+  title: ValEstate API
   version: "1.0.0-alpha"
   description: >
     Verification-first real-estate marketplace API. Source of truth for all

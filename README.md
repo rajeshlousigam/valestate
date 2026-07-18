@@ -1,4 +1,4 @@
-# HousePoint
+# ValEstate
 
 A **verification-first real-estate marketplace** — every property is verified by a human Operations process **before** it becomes publicly visible.
 

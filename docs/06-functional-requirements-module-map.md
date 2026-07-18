@@ -1,6 +1,6 @@
 # Document 06 — Functional Requirements: Module Map & Standards
 
-**Project Codename:** HousePoint
+**Project Codename:** ValEstate
 **Document Owner:** Business Analyst
 **Status:** DRAFT · **Version:** 0.1.0 · **Last Updated:** 2026-07-18
 **Parents:** *Doc 03, 04, 05*

@@ -1,6 +1,6 @@
 # Document 07 — Property Lifecycle & Verification Workflow
 
-**Project Codename:** HousePoint
+**Project Codename:** ValEstate
 **Document Owner:** BA / Operations / Architect
 **Status:** DRAFT · **Version:** 0.1.0 · **Last Updated:** 2026-07-18
 **Parents:** *Doc 03, 04, 06*

@@ -1,6 +1,6 @@
 # Document 20 — DevOps, Infrastructure & Environments
 
-**Project Codename:** HousePoint
+**Project Codename:** ValEstate
 **Document Owner:** DevOps Consultant
 **Status:** DRAFT · **Version:** 0.1.0 · **Last Updated:** 2026-07-18
 **Parents:** *Doc 05, 10, 19*
@@ -8,7 +8,7 @@
 ---
 
 ## 1. Purpose
-Define **infrastructure, environments, CI/CD, observability, and operational reliability** for HousePoint on AWS: how the stack (Next.js, Yii2 API, workers, MySQL, Redis, S3) is deployed, scaled, secured, monitored, backed up, and released.
+Define **infrastructure, environments, CI/CD, observability, and operational reliability** for ValEstate on AWS: how the stack (Next.js, Yii2 API, workers, MySQL, Redis, S3) is deployed, scaled, secured, monitored, backed up, and released.
 
 ## 2. Scope
 **In:** environments, cloud topology, CI/CD pipelines, secrets, observability, backups/DR, scaling, cost, incident/runbooks.

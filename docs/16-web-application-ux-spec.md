@@ -1,6 +1,6 @@
 # Document 16 — Web Application UX Spec
 
-**Project Codename:** HousePoint
+**Project Codename:** ValEstate
 **Document Owner:** UX Designer
 **Status:** DRAFT · **Version:** 0.1.0 · **Last Updated:** 2026-07-18
 **Parents:** *Doc 03, 06, 09, 11*

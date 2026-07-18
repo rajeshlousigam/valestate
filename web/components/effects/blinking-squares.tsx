@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 /**
  * "Blinking Squares" background — property/building tiles that quietly twinkle,
  * scattered like markers on a map (jittered positions + faint map grid + roads).
- * License-free equivalent of the React Bits Pro component, tuned to HousePoint's
+ * License-free equivalent of the React Bits Pro component, tuned to ValEstate's
  * emerald + gold identity. Positions are seeded so SSR and client match.
  */
 

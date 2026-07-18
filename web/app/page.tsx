@@ -53,7 +53,7 @@ export default function Home() {
               Find a home you can <span className="brand-text">actually trust</span>.
             </h1>
             <p className="animate-fade-up mx-auto mt-5 max-w-xl text-balance text-lg text-muted">
-              Every listing on HousePoint is verified by our team — documents, identity and a
+              Every listing on ValEstate is verified by our team — documents, identity and a
               real call — before it goes public. No fakes, no duplicates, no brokers.
             </p>
           </div>
@@ -162,7 +162,7 @@ export default function Home() {
       {/* ---------- WHY ---------- */}
       <section id="why" className="scroll-mt-24 pt-24">
         <Container>
-          <SectionHeading align="center" eyebrow="The HousePoint difference" title="Trust, built into every listing" />
+          <SectionHeading align="center" eyebrow="The ValEstate difference" title="Trust, built into every listing" />
           <div className="mt-12 grid gap-6 md:grid-cols-3">
             {WHY.map((w) => (
               <GlassCard key={w.title} panel className="p-7">

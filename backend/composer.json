@@ -1,6 +1,6 @@
 {
     "name": "housepoint/backend",
-    "description": "HousePoint REST API — verification-first real-estate marketplace",
+    "description": "ValEstate REST API — verification-first real-estate marketplace",
     "type": "project",
     "license": "proprietary",
     "minimum-stability": "stable",

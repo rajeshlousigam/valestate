@@ -1,4 +1,4 @@
-/** Indian numbering: ₹, lakh/crore. HousePoint launch city = Imphal (docs/24). */
+/** Indian numbering: ₹, lakh/crore. ValEstate launch city = Imphal (docs/24). */
 export function formatINR(amount: number): string {
   if (amount >= 10000000) {
     const cr = amount / 10000000;

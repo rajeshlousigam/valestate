@@ -1,6 +1,6 @@
 # Document 21 — QA Strategy & Test Architecture
 
-**Project Codename:** HousePoint
+**Project Codename:** ValEstate
 **Document Owner:** QA Lead
 **Status:** DRAFT · **Version:** 0.1.0 · **Last Updated:** 2026-07-18
 **Parents:** *Doc 06, 07, 09, 19*

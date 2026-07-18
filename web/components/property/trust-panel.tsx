@@ -17,7 +17,7 @@ export function TrustPanel({ property }: { property: Property }) {
           <ShieldCheck className="h-6 w-6" />
         </span>
         <div>
-          <p className="font-semibold">Verified by HousePoint</p>
+          <p className="font-semibold">Verified by ValEstate</p>
           <p className="text-xs text-muted">Checked on {verifiedOn}</p>
         </div>
       </div>

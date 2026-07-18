@@ -1,6 +1,6 @@
 # Document 11 — SEO Architecture & Content Strategy
 
-**Project Codename:** HousePoint
+**Project Codename:** ValEstate
 **Document Owner:** UX / Frontend / Product
 **Status:** DRAFT · **Version:** 0.1.0 · **Last Updated:** 2026-07-18
 **Parents:** *Doc 05, 07, 08*
@@ -8,7 +8,7 @@
 ---
 
 ## 1. Purpose
-Define the **SEO-first architecture** (pillar from *Doc 01*) that makes organic search HousePoint's primary acquisition channel (*Doc 02 §11*). Covers rendering strategy, URL/taxonomy, structured data, technical SEO, content model, and how "verified" becomes an SEO differentiator.
+Define the **SEO-first architecture** (pillar from *Doc 01*) that makes organic search ValEstate's primary acquisition channel (*Doc 02 §11*). Covers rendering strategy, URL/taxonomy, structured data, technical SEO, content model, and how "verified" becomes an SEO differentiator.
 
 ## 2. Scope
 **In:** rendering (SSR/ISR), URL & taxonomy design, metadata & structured data (JSON-LD), sitemaps/robots, canonical/duplication handling, Core Web Vitals, content/landing-page strategy, internal linking, localization-readiness.

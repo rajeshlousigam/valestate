@@ -1,6 +1,6 @@
 # Document 01 — Product Vision, Strategy & Scope
 
-**Project Codename:** HousePoint
+**Project Codename:** ValEstate
 **Document Owner:** Product Lead
 **Status:** DRAFT — Awaiting Approval
 **Version:** 0.2.0
@@ -10,7 +10,7 @@
 
 ## 1. Purpose
 
-This document establishes the **strategic foundation** for the HousePoint platform. It defines *what we are building, why it must exist, who it serves, how we win, and how we will measure success*. Every subsequent document (architecture, data model, API contracts, operations playbooks, QA strategy) inherits its terminology, principles, and scope boundaries from this document.
+This document establishes the **strategic foundation** for the ValEstate platform. It defines *what we are building, why it must exist, who it serves, how we win, and how we will measure success*. Every subsequent document (architecture, data model, API contracts, operations playbooks, QA strategy) inherits its terminology, principles, and scope boundaries from this document.
 
 This is the **root node** of the documentation tree. If a decision in a later document conflicts with this one, either this document is amended (with a revision entry) or the later document is corrected.
 
@@ -59,7 +59,7 @@ This document is "done" when:
 > **To become the operating system for real estate transactions** — the trusted layer through which every property is verified, discovered, negotiated, and transacted.
 
 ### 5.2 Mission (what we do now)
-> **We make real estate trustworthy** by ensuring every property on HousePoint is verified by a human operations process *before* it becomes publicly visible — eliminating fake, duplicate, and fraudulent listings that plague existing marketplaces.
+> **We make real estate trustworthy** by ensuring every property on ValEstate is verified by a human operations process *before* it becomes publicly visible — eliminating fake, duplicate, and fraudulent listings that plague existing marketplaces.
 
 ### 5.3 The Problem We Attack
 Incumbent marketplaces (99acres, MagicBricks, Zillow-style aggregators) optimize for **listing volume**, not **listing truth**. This produces:
@@ -105,7 +105,7 @@ These pillars are **binding constraints**. Any proposed feature that violates a 
 
 ```mermaid
 graph LR
-    O[Property Owner / Lister] -->|submits property| P((HousePoint Platform))
+    O[Property Owner / Lister] -->|submits property| P((ValEstate Platform))
     P -->|verification request| OPS[Operations / Verifier]
     OPS -->|approve / reject| P
     P -->|verified listings| B[Buyer / Seeker]

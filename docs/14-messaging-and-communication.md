@@ -1,6 +1,6 @@
 # Document 14 — Messaging & Buyer↔Owner Communication
 
-**Project Codename:** HousePoint
+**Project Codename:** ValEstate
 **Document Owner:** Product / Architect
 **Status:** DRAFT · **Version:** 0.1.0 · **Last Updated:** 2026-07-18
 **Parents:** *Doc 03, 04, 07*
@@ -88,7 +88,7 @@ sequenceDiagram
 
 ## 10. Transaction Milestone Signals (North Star)
 - Owner can mark listing `UNDER_NEGOTIATION` and `CLOSED` (reason: sold/rented/withdrawn).
-- Optional lightweight confirmation ("Did you find your buyer on HousePoint?") → counts toward **Verified Transactions Facilitated** (*Doc 01*). Phase 2–3 formalizes.
+- Optional lightweight confirmation ("Did you find your buyer on ValEstate?") → counts toward **Verified Transactions Facilitated** (*Doc 01*). Phase 2–3 formalizes.
 
 ## 11. Abuse & Safety
 - Spam/scam detection in messages (keywords, links, velocity); block/report in thread.

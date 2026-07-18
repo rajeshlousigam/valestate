@@ -1,6 +1,6 @@
 # Document 13 — Discovery, Search & Recommendation
 
-**Project Codename:** HousePoint
+**Project Codename:** ValEstate
 **Document Owner:** Product / Architect
 **Status:** DRAFT · **Version:** 0.1.0 · **Last Updated:** 2026-07-18
 **Parents:** *Doc 04, 05, 08, 11*

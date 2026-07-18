@@ -2,7 +2,7 @@
   "name": "housepoint-web",
   "version": "0.1.0",
   "private": true,
-  "description": "HousePoint public site + buyer/owner apps (Next.js, SEO-first) — docs/11, docs/16",
+  "description": "ValEstate public site + buyer/owner apps (Next.js, SEO-first) — docs/11, docs/16",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

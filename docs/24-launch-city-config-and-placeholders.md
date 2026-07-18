@@ -1,6 +1,6 @@
 # Document 24 — Launch City Configuration & Phase 0/1 Placeholders
 
-**Project Codename:** HousePoint
+**Project Codename:** ValEstate
 **Document Owner:** Product / Ops / Eng
 **Status:** DRAFT · **Version:** 0.1.0 · **Last Updated:** 2026-07-18
 **Parents:** *Doc 01 (D-1), 06, 07, 11, 12, 22*

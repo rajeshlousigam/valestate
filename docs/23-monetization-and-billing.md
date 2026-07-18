@@ -1,6 +1,6 @@
 # Document 23 — Monetization & Billing
 
-**Project Codename:** HousePoint
+**Project Codename:** ValEstate
 **Document Owner:** Product
 **Status:** DRAFT (directional) · **Version:** 0.1.0 · **Last Updated:** 2026-07-18
 **Parents:** *Doc 01, 02, 07, 09*
@@ -8,7 +8,7 @@
 ---
 
 ## 1. Purpose
-Define the **monetization strategy and billing architecture** — how HousePoint earns revenue **without compromising the verification-first trust model**. Directional at MVP (launch may be free/subsidized to solve cold-start, *Doc 02 §11*), with an architecture ready to switch on paid tiers.
+Define the **monetization strategy and billing architecture** — how ValEstate earns revenue **without compromising the verification-first trust model**. Directional at MVP (launch may be free/subsidized to solve cold-start, *Doc 02 §11*), with an architecture ready to switch on paid tiers.
 
 ## 2. Scope
 **In:** revenue streams, pricing philosophy, the trust guardrail, billing architecture, entitlements, phasing, metrics.

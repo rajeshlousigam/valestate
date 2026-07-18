@@ -1,6 +1,6 @@
 # Document 04 — Domain Model & Ubiquitous Language (DDD)
 
-**Project Codename:** HousePoint
+**Project Codename:** ValEstate
 **Document Owner:** System Architect
 **Status:** DRAFT
 **Version:** 0.1.0

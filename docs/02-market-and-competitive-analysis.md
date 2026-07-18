@@ -1,6 +1,6 @@
 # Document 02 — Market & Competitive Analysis
 
-**Project Codename:** HousePoint
+**Project Codename:** ValEstate
 **Document Owner:** Product Lead / Business Analyst
 **Status:** DRAFT — Awaiting Approval
 **Version:** 0.1.0
@@ -11,7 +11,7 @@
 
 ## 1. Purpose
 
-This document defines **where HousePoint plays and how it wins**. It benchmarks the incumbents, isolates the structural weaknesses our **verification-first** wedge (*Doc 01, §5.4*) exploits, sizes the opportunity for a **single-city launch (Decision D-1)**, and specifies the **cold-start / go-to-market strategy** that supply-first marketplaces require. It converts the strategic bet from *Doc 01* into a defensible market position that engineering, ops, and marketing can build toward.
+This document defines **where ValEstate plays and how it wins**. It benchmarks the incumbents, isolates the structural weaknesses our **verification-first** wedge (*Doc 01, §5.4*) exploits, sizes the opportunity for a **single-city launch (Decision D-1)**, and specifies the **cold-start / go-to-market strategy** that supply-first marketplaces require. It converts the strategic bet from *Doc 01* into a defensible market position that engineering, ops, and marketing can build toward.
 
 ## 2. Scope
 
@@ -19,7 +19,7 @@ This document defines **where HousePoint plays and how it wins**. It benchmarks 
 - Competitive landscape teardown (direct + adjacent players)
 - Feature & trust-model comparison matrix
 - Structural weaknesses of incumbents we exploit
-- HousePoint positioning statement & differentiation
+- ValEstate positioning statement & differentiation
 - SWOT
 - Market sizing framework (TAM/SAM/SOM) for a single-city launch
 - Cold-start / chicken-and-egg strategy (the marketplace's hardest problem)
@@ -62,7 +62,7 @@ Real-estate marketplaces are **classic two-sided networks**: supply (property li
 | **Broker-disintermediation** | NoBroker | "Skip the broker, save brokerage" | Still self-serve trust; verification is shallow/optional |
 | **Portal + data** | Zillow, Realtor.com | "Data + estimates + agents" | Agent/MLS-centric; buyer is a lead to be sold |
 
-**HousePoint is a fourth archetype: the *Verified Marketplace*** — trust is the product, not a filter toggle. Smaller catalog, near-zero noise.
+**ValEstate is a fourth archetype: the *Verified Marketplace*** — trust is the product, not a filter toggle. Smaller catalog, near-zero noise.
 
 ---
 
@@ -94,7 +94,7 @@ Real-estate marketplaces are **classic two-sided networks**: supply (property li
 
 ## 7. Competitive Comparison Matrix
 
-| Capability | 99acres / MagicBricks | Housing.com | NoBroker | Zillow/Realtor | **HousePoint** |
+| Capability | 99acres / MagicBricks | Housing.com | NoBroker | Zillow/Realtor | **ValEstate** |
 |---|---|---|---|---|---|
 | Inventory volume | ★★★★★ | ★★★★ | ★★★ | ★★★★★ | ★★ (by design) |
 | **Human verification before public** | ✗ | ✗ | Partial | ✗ (MLS-fed) | ★★★★★ **core** |
@@ -115,7 +115,7 @@ Real-estate marketplaces are **classic two-sided networks**: supply (property li
 ### 8.1 Positioning Statement
 > **For** high-intent property seekers and genuine owners in [Launch City]
 > **who** are frustrated by fake, duplicate, and broker-spammed listings,
-> **HousePoint is** a verified real-estate marketplace
+> **ValEstate is** a verified real-estate marketplace
 > **that** publishes only properties confirmed by a human operations team before they go public,
 > **unlike** 99acres, MagicBricks, and NoBroker, which optimize for listing volume over listing truth.
 
@@ -125,7 +125,7 @@ Real-estate marketplaces are **classic two-sided networks**: supply (property li
 3. **Every page is real** — what you see is available and accurate. (Quality)
 
 ### 8.3 Brand Promise
-> "If it's on HousePoint, it's real."
+> "If it's on ValEstate, it's real."
 
 ### 8.4 What we deliberately are NOT
 - Not the biggest catalog.
@@ -219,7 +219,7 @@ Verification sits at the **head** of the flywheel: it's the cost that makes ever
 | Moat | Type | Why competitors can't easily copy |
 |---|---|---|
 | **Verification operations muscle** | Process/execution | It's expensive, human, and counter to incumbents' volume incentive; they'd have to cannibalize their model |
-| **Trust brand ("if it's on HousePoint, it's real")** | Brand | Trust is earned over time and destroyed by one visible fake — incumbents can't retrofit it |
+| **Trust brand ("if it's on ValEstate, it's real")** | Brand | Trust is earned over time and destroyed by one visible fake — incumbents can't retrofit it |
 | **Verified-data asset** | Data | A growing corpus of *verified* properties/owners is uniquely valuable for B2B (banks, insurers) — *Doc 01 §15* |
 | **Local density + SEO compounding** | Network + SEO | First-mover verified density in a city + ranking pages is hard to displace |
 | **Modular event-driven platform** | Tech | Enables fast expansion of contexts (search, messaging, txn rails) without rewrites (*Doc 05*) |

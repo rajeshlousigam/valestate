@@ -1,7 +1,7 @@
 import { BadgeCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-/** The signature HousePoint trust marker (docs/16 §8). */
+/** The signature ValEstate trust marker (docs/16 §8). */
 export function VerifiedBadge({
   className,
   size = "md",

@@ -1,6 +1,6 @@
 # Document 05 — System & Solution Architecture
 
-**Project Codename:** HousePoint
+**Project Codename:** ValEstate
 **Document Owner:** Solution Architect
 **Status:** DRAFT · **Version:** 0.1.0 · **Last Updated:** 2026-07-18
 **Parents:** *Doc 01, 04*

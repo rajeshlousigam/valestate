@@ -1,6 +1,6 @@
 # Document 15 — Analytics, Events & Tracking Taxonomy
 
-**Project Codename:** HousePoint
+**Project Codename:** ValEstate
 **Document Owner:** Product / Data
 **Status:** DRAFT · **Version:** 0.1.0 · **Last Updated:** 2026-07-18
 **Parents:** *Doc 01, 04, 07*

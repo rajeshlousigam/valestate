@@ -3,7 +3,7 @@ COMPOSE = docker compose -f infra/docker-compose.yml --env-file .env
 .PHONY: help up down logs ps build migrate seed health composer shell-api web-install web-dev fresh
 
 help:
-	@echo "HousePoint dev commands:"
+	@echo "ValEstate dev commands:"
 	@echo "  make up          - start all services (mysql, redis, backend, nginx, adminer)"
 	@echo "  make down        - stop all services"
 	@echo "  make build       - (re)build backend image"

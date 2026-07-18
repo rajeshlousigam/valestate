@@ -1,6 +1,6 @@
-# HousePoint — Enterprise Documentation Suite
+# ValEstate — Enterprise Documentation Suite
 
-**Project Codename:** HousePoint — a **verification-first real-estate marketplace**: every property is verified by a human Operations process *before* it becomes publicly visible. Vision: *the operating system for real estate transactions*.
+**Project Codename:** ValEstate — a **verification-first real-estate marketplace**: every property is verified by a human Operations process *before* it becomes publicly visible. Vision: *the operating system for real estate transactions*.
 
 **Status:** Documentation baseline complete (v0.1–0.2 drafts). Engineering can begin against these specs.
 **Last Updated:** 2026-07-18

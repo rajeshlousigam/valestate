@@ -8,7 +8,7 @@ import { SpecularCTA } from "@/components/ui/specular-cta";
 
 export const metadata: Metadata = {
   title: "List your property",
-  description: "List your property in Imphal on HousePoint and get the verified badge.",
+  description: "List your property in Imphal on ValEstate and get the verified badge.",
 };
 
 const STEPS = [
@@ -27,7 +27,7 @@ export default function ListPropertyPage() {
           List your property, the <span className="brand-text">verified</span> way.
         </h1>
         <p className="mx-auto mt-4 max-w-xl text-muted">
-          Reach genuine buyers in Imphal. Every HousePoint listing is verified before it goes
+          Reach genuine buyers in Imphal. Every ValEstate listing is verified before it goes
           public — which is exactly why buyers trust it.
         </p>
         <div className="mt-8 flex flex-wrap justify-center gap-3">
@@ -55,7 +55,7 @@ export default function ListPropertyPage() {
 
       <GlassCard panel className="mx-auto mt-14 max-w-2xl p-8 text-center">
         <p className="text-sm text-muted">
-          The owner submission flow connects to the HousePoint verification API
+          The owner submission flow connects to the ValEstate verification API
           (Property → Verification → Publish). This front-end is wired for mock data today;
           the API is already built and tested.
         </p>

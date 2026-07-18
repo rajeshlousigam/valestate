@@ -7,7 +7,7 @@ $db = require __DIR__ . '/db.php';
 
 $config = [
     'id' => 'housepoint-api',
-    'name' => 'HousePoint API',
+    'name' => 'ValEstate API',
     'basePath' => dirname(__DIR__),
     'timeZone' => 'UTC',
     'bootstrap' => ['log'],

@@ -1,6 +1,6 @@
 # Document 19 — Non-Functional Requirements & Phased Roadmap
 
-**Project Codename:** HousePoint
+**Project Codename:** ValEstate
 **Document Owner:** Architect / Product
 **Status:** DRAFT · **Version:** 0.1.0 · **Last Updated:** 2026-07-18
 **Parents:** all documents
@@ -75,7 +75,7 @@ Clear, measurable NFRs and a phase plan that launches the MVP fast without archi
 
 ```mermaid
 gantt
-    title HousePoint Delivery Phases
+    title ValEstate Delivery Phases
     dateFormat X
     axisFormat %s
     section P0 Foundations
