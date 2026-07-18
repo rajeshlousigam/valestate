@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace app\commands;
 
+use app\components\Uuid;
+use app\models\User;
 use Yii;
 use yii\console\Controller;
 use yii\console\ExitCode;
@@ -42,13 +44,42 @@ class SeedController extends Controller
         ],
     ];
 
+    /** Dev staff logins for the admin console (docs/18). Password: secret123 */
+    private const STAFF = [
+        ['name' => 'Anand Verifier', 'email' => 'verifier@valestate.test', 'phone' => '8000000001', 'roles' => ['verifier']],
+        ['name' => 'Meera Ops', 'email' => 'ops@valestate.test', 'phone' => '8000000002', 'roles' => ['verifier', 'ops_manager']],
+        ['name' => 'Nisha Admin', 'email' => 'admin@valestate.test', 'phone' => '8000000003', 'roles' => ['admin']],
+    ];
+
     public function actionLaunchCity(): int
     {
         $this->seedRoles();
         $this->seedConfig();
         $this->seedLocalities();
+        $this->seedStaff();
         $this->stdout("Launch-city seed complete (Imphal).\n");
         return ExitCode::OK;
+    }
+
+    private function seedStaff(): void
+    {
+        foreach (self::STAFF as $s) {
+            if (User::find()->where(['email' => $s['email']])->exists()) {
+                continue;
+            }
+            $u = new User();
+            $u->uuid = Uuid::v4();
+            $u->name = $s['name'];
+            $u->email = $s['email'];
+            $u->phone = $s['phone'];
+            $u->status = User::STATUS_ACTIVE;
+            $u->setPassword('secret123');
+            $u->save(false);
+            foreach ($s['roles'] as $r) {
+                $u->assignRole($r);
+            }
+        }
+        $this->stdout("Staff seeded (verifier@ / ops@ / admin@ valestate.test · pw secret123).\n");
     }
 
     private function seedRoles(): void
