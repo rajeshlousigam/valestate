@@ -13,12 +13,17 @@ servers:
 tags:
   - name: system
   - name: auth
+  - name: property
+  - name: verification
+  - name: catalog
+  - name: engagement
 
 paths:
   /health:
     get:
       tags: [system]
       summary: Liveness/readiness probe
+      security: []
       responses:
         "200":
           description: Service healthy
@@ -32,6 +37,7 @@ paths:
     post:
       tags: [auth]
       summary: Register a new user (buyer or owner)
+      security: []
       requestBody:
         required: true
         content:
@@ -49,6 +55,7 @@ paths:
     post:
       tags: [auth]
       summary: Log in
+      security: []
       requestBody:
         required: true
         content:
@@ -66,6 +73,7 @@ paths:
     post:
       tags: [auth]
       summary: Rotate tokens (reuse detection per docs/10)
+      security: []
       requestBody:
         required: true
         content:
@@ -87,6 +95,7 @@ paths:
     post:
       tags: [auth]
       summary: Revoke refresh token
+      security: []
       requestBody:
         content:
           application/json:
@@ -113,7 +122,221 @@ paths:
                   data: { $ref: "#/components/schemas/UserProfile" }
         "401": { $ref: "#/components/responses/Unauthorized" }
 
+  # ---- Property (owner) ----
+  /properties:
+    post:
+      tags: [property]
+      summary: Create a property (draft)
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/PropertyInput" }
+      responses:
+        "201": { description: Created }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "422": { $ref: "#/components/responses/Unprocessable" }
+  /properties/mine:
+    get:
+      tags: [property]
+      summary: List my properties
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200": { description: OK }
+  /properties/{uuid}:
+    get:
+      tags: [property]
+      summary: Get my property
+      security: [{ bearerAuth: [] }]
+      parameters: [{ $ref: "#/components/parameters/Uuid" }]
+      responses:
+        "200": { description: OK }
+        "404": { $ref: "#/components/responses/NotFound" }
+    patch:
+      tags: [property]
+      summary: Update my property (editable statuses only)
+      security: [{ bearerAuth: [] }]
+      parameters: [{ $ref: "#/components/parameters/Uuid" }]
+      responses:
+        "200": { description: OK }
+        "409": { description: Not editable in current status }
+  /properties/{uuid}/submit:
+    post:
+      tags: [property]
+      summary: Submit for verification (requires ownership doc + media, invariant I-1)
+      security: [{ bearerAuth: [] }]
+      parameters: [{ $ref: "#/components/parameters/Uuid" }]
+      responses:
+        "200": { description: Submitted; verification case created }
+        "422": { $ref: "#/components/responses/Unprocessable" }
+  /properties/{uuid}/close:
+    post:
+      tags: [property]
+      summary: Mark property closed (sold/rented/withdrawn)
+      security: [{ bearerAuth: [] }]
+      parameters: [{ $ref: "#/components/parameters/Uuid" }]
+      responses:
+        "200": { description: Closed }
+  /properties/{uuid}/documents:
+    post:
+      tags: [property]
+      summary: Upload ownership/identity document (RESTRICTED, private storage)
+      security: [{ bearerAuth: [] }]
+      parameters: [{ $ref: "#/components/parameters/Uuid" }]
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file: { type: string, format: binary }
+                docType: { type: string, enum: [OWNERSHIP, IDENTITY, OTHER] }
+      responses:
+        "201": { description: "Uploaded; returns documentId only, never content" }
+  /properties/{uuid}/media:
+    post:
+      tags: [property]
+      summary: Upload property photo (public)
+      security: [{ bearerAuth: [] }]
+      parameters: [{ $ref: "#/components/parameters/Uuid" }]
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file: { type: string, format: binary }
+      responses:
+        "201": { description: Uploaded }
+
+  # ---- Verification (ops) ----
+  /verification/queue:
+    get:
+      tags: [verification]
+      summary: Open verification cases (SLA-ordered)
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200": { description: OK }
+        "403": { $ref: "#/components/responses/Forbidden" }
+  /verification-cases/{id}/claim:
+    post:
+      tags: [verification]
+      summary: Claim a case (conflict-of-interest guarded)
+      security: [{ bearerAuth: [] }]
+      parameters: [{ $ref: "#/components/parameters/IntId" }]
+      responses:
+        "200": { description: Claimed }
+        "409": { description: Not claimable }
+  /verification-cases/{id}:
+    get:
+      tags: [verification]
+      summary: Case detail (checklist, docs metadata, owner contact for the call)
+      security: [{ bearerAuth: [] }]
+      parameters: [{ $ref: "#/components/parameters/IntId" }]
+      responses:
+        "200": { description: OK }
+        "403": { $ref: "#/components/responses/Forbidden" }
+  /verification-cases/{id}/documents/{docId}/access:
+    get:
+      tags: [verification]
+      summary: Audited access to a sensitive document (streams file; logs access)
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { $ref: "#/components/parameters/IntId" }
+        - { name: docId, in: path, required: true, schema: { type: integer } }
+      responses:
+        "200": { description: Document stream }
+        "403": { $ref: "#/components/responses/Forbidden" }
+  /verification-cases/{id}/checklist:
+    patch:
+      tags: [verification]
+      summary: Update checklist item results
+      security: [{ bearerAuth: [] }]
+      parameters: [{ $ref: "#/components/parameters/IntId" }]
+      responses:
+        "200": { description: OK }
+  /verification-cases/{id}/request-info:
+    post:
+      tags: [verification]
+      summary: Request more info from owner (pauses SLA)
+      security: [{ bearerAuth: [] }]
+      parameters: [{ $ref: "#/components/parameters/IntId" }]
+      responses:
+        "200": { description: OK }
+  /verification-cases/{id}/decision:
+    post:
+      tags: [verification]
+      summary: Approve (publishes listing) or Reject (with reason code)
+      security: [{ bearerAuth: [] }]
+      parameters: [{ $ref: "#/components/parameters/IntId" }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [decision]
+              properties:
+                decision: { type: string, enum: [APPROVED, REJECTED] }
+                reasonCode: { type: string }
+                note: { type: string }
+      responses:
+        "200": { description: Decided }
+        "422": { $ref: "#/components/responses/Unprocessable" }
+
+  # ---- Catalog (public) + Inquiry (buyer) ----
+  /listings:
+    get:
+      tags: [catalog]
+      summary: Search public verified listings (no PII)
+      security: []
+      parameters:
+        - { name: type, in: query, schema: { type: string, enum: [RESIDENTIAL, COMMERCIAL, LAND] } }
+        - { name: intent, in: query, schema: { type: string, enum: [SALE, RENT] } }
+        - { name: locality, in: query, schema: { type: string } }
+        - { name: limit, in: query, schema: { type: integer, default: 20 } }
+        - { name: offset, in: query, schema: { type: integer, default: 0 } }
+      responses:
+        "200": { description: OK }
+  /listings/{slug}:
+    get:
+      tags: [catalog]
+      summary: Public listing detail with trust signals
+      security: []
+      parameters: [{ name: slug, in: path, required: true, schema: { type: string } }]
+      responses:
+        "200": { description: OK }
+        "404": { $ref: "#/components/responses/NotFound" }
+  /listings/{slug}/inquiries:
+    post:
+      tags: [engagement]
+      summary: Buyer inquiry on a listing
+      security: [{ bearerAuth: [] }]
+      parameters: [{ name: slug, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                message: { type: string }
+      responses:
+        "201": { description: Inquiry created }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
 components:
+  parameters:
+    Uuid:
+      name: uuid
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    IntId:
+      name: id
+      in: path
+      required: true
+      schema: { type: integer }
   securitySchemes:
     bearerAuth:
       type: http
@@ -127,6 +350,16 @@ components:
           schema: { $ref: "#/components/schemas/Error" }
     Unprocessable:
       description: Domain/validation error
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    Forbidden:
+      description: Insufficient permissions (RBAC)
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    NotFound:
+      description: Resource not found
       content:
         application/json:
           schema: { $ref: "#/components/schemas/Error" }
@@ -170,13 +403,34 @@ components:
         id: { type: string, format: uuid }
         name: { type: string }
         email: { type: string }
-        phone: { type: string, nullable: true }
+        phone: { type: [string, "null"] }
         status: { type: string }
         roles:
           type: array
           items: { type: string }
         emailVerified: { type: boolean }
         phoneVerified: { type: boolean }
+    PropertyInput:
+      type: object
+      required: [type, intent, title]
+      properties:
+        type: { type: string, enum: [RESIDENTIAL, COMMERCIAL, LAND] }
+        intent: { type: string, enum: [SALE, RENT] }
+        title: { type: string }
+        description: { type: string }
+        localityId: { type: [integer, "null"] }
+        address: { type: string }
+        pincode: { type: string }
+        priceMinor: { type: integer }
+        depositMinor: { type: integer }
+        areaValue: { type: number }
+        areaUnit: { type: string }
+        geo:
+          type: object
+          properties:
+            lat: { type: number }
+            lng: { type: number }
+        attributes: { type: object, additionalProperties: true }
     Error:
       type: object
       properties:
