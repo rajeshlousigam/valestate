@@ -5,12 +5,12 @@ import { Cover } from "@/components/ui/cover";
 import { VerifiedBadge } from "@/components/ui/verified-badge";
 import { cn } from "@/lib/utils";
 
-export function Gallery({ covers }: { covers: number[] }) {
+export function Gallery({ covers, alt = "" }: { covers: number[]; alt?: string }) {
   const [active, setActive] = useState(0);
 
   return (
     <div className="space-y-3">
-      <Cover index={covers[active]} className="aspect-[16/10] w-full" rounded="rounded-4xl">
+      <Cover index={covers[active]} alt={alt} width={1200} className="aspect-[16/10] w-full" rounded="rounded-4xl">
         <div className="absolute left-4 top-4">
           <VerifiedBadge className="bg-white/85 text-brand ring-white/60" />
         </div>
@@ -27,7 +27,7 @@ export function Gallery({ covers }: { covers: number[] }) {
                 i === active ? "ring-brand" : "ring-transparent opacity-70 hover:opacity-100",
               )}
             >
-              <Cover index={c} rounded="rounded-2xl" className="h-16 w-24" />
+              <Cover index={c} rounded="rounded-2xl" className="h-16 w-24" overlay={false} />
             </button>
           ))}
         </div>

@@ -177,8 +177,8 @@ export const PROPERTIES: Property[] = [
     verifiedChecks: ["Ownership documents", "Owner identity", "On-call confirmation"],
     postedAt: "2026-07-12",
     featured: true,
-    cover: 7,
-    gallery: [7, 4, 1],
+    cover: 10,
+    gallery: [10, 11, 12],
   },
   {
     id: "p6",
@@ -199,8 +199,8 @@ export const PROPERTIES: Property[] = [
     verifiedAt: "2026-07-05",
     verifiedChecks: ["Land title / Patta", "Owner identity", "On-call confirmation"],
     postedAt: "2026-07-06",
-    cover: 6,
-    gallery: [6, 5],
+    cover: 13,
+    gallery: [13, 14],
   },
   {
     id: "p7",
@@ -284,8 +284,8 @@ export const PROPERTIES: Property[] = [
     verifiedAt: "2026-07-09",
     verifiedChecks: ["Ownership documents", "Owner identity", "On-call confirmation"],
     postedAt: "2026-07-10",
-    cover: 0,
-    gallery: [0, 7, 3],
+    cover: 11,
+    gallery: [11, 12, 10],
   },
   {
     id: "p10",
@@ -363,8 +363,8 @@ export const PROPERTIES: Property[] = [
     verifiedAt: "2026-07-04",
     verifiedChecks: ["Land title / Patta", "Owner identity", "On-call confirmation"],
     postedAt: "2026-07-05",
-    cover: 7,
-    gallery: [7, 6],
+    cover: 14,
+    gallery: [14, 13],
   },
 ];
 

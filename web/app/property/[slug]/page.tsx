@@ -82,7 +82,7 @@ export default async function PropertyPage({
       <div className="mt-5 grid gap-8 lg:grid-cols-[1.6fr_1fr]">
         {/* left column */}
         <div>
-          <Gallery covers={p.gallery.length ? p.gallery : [p.cover]} />
+          <Gallery covers={p.gallery.length ? p.gallery : [p.cover]} alt={p.title} />
 
           <div className="mt-6">
             <div className="flex flex-wrap items-center gap-3">

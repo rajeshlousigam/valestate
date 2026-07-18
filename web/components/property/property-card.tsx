@@ -22,7 +22,7 @@ export function PropertyCard({ property, className }: { property: Property; clas
       className={cn("group card-hover block rounded-4xl", className)}
     >
       <article className="glass overflow-hidden rounded-4xl">
-        <Cover index={property.cover} rounded="rounded-none" className="aspect-[16/11]">
+        <Cover index={property.cover} alt={property.title} rounded="rounded-none" className="aspect-[16/11]">
           <div className="absolute inset-x-0 top-0 flex items-start justify-between p-4">
             <span className="rounded-full bg-black/25 px-2.5 py-1 text-xs font-medium text-white backdrop-blur-md">
               {property.intent === "RENT" ? "For Rent" : "For Sale"} · {TYPE_LABEL[property.type]}

@@ -29,8 +29,8 @@ const STEPS = [
 
 const TYPES = [
   { type: "RESIDENTIAL", label: "Homes & Flats", desc: "Apartments, houses & duplexes", icon: Building2, href: "/search?type=RESIDENTIAL", cover: 0 },
-  { type: "COMMERCIAL", label: "Commercial", desc: "Shops, offices & showrooms", icon: TrendingUp, href: "/search?type=COMMERCIAL", cover: 7 },
-  { type: "LAND", label: "Land & Plots", desc: "Verified-title plots", icon: LandPlot, href: "/search?type=LAND", cover: 5 },
+  { type: "COMMERCIAL", label: "Commercial", desc: "Shops, offices & showrooms", icon: TrendingUp, href: "/search?type=COMMERCIAL", cover: 10 },
+  { type: "LAND", label: "Land & Plots", desc: "Verified-title plots", icon: LandPlot, href: "/search?type=LAND", cover: 13 },
 ];
 
 const WHY = [
