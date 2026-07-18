@@ -5,27 +5,24 @@ declare(strict_types=1);
 namespace app\modules\verification\controllers;
 
 use app\components\BaseApiController;
-use app\components\Uuid;
-use app\models\Listing;
 use app\models\Property;
 use app\models\User;
 use app\models\VerificationCase;
 use app\services\AuditService;
-use app\services\OutboxService;
+use app\services\ServiceException;
 use app\services\StorageService;
+use app\services\VerificationService;
 use Yii;
-use yii\helpers\Inflector;
-use yii\web\ForbiddenHttpException;
 use yii\web\NotFoundHttpException;
 use yii\web\Response;
 
 /**
- * Ops verification console API (docs/07, docs/09 §8.3, docs/18).
+ * Ops verification console API (docs/07, docs/09 §8.3).
+ * State changes delegate to VerificationService (shared with the admin console).
  */
 class VerificationController extends BaseApiController
 {
     private const OPS_ROLES = ['verifier', 'ops_manager', 'admin', 'super_admin'];
-    private const REASSIGN_ROLES = ['ops_manager', 'admin', 'super_admin'];
 
     public function beforeAction($action): bool
     {
@@ -63,29 +60,10 @@ class VerificationController extends BaseApiController
     public function actionClaim(int $id): array
     {
         $case = $this->case($id);
-        if ($case->state !== VerificationCase::UNCLAIMED) {
-            return $this->conflict("Case is {$case->state}, cannot claim");
-        }
-        // conflict of interest (docs/03 BR-03.2, docs/07 I-7)
-        if ($case->owner_id === $this->user()->id) {
-            throw new ForbiddenHttpException('Conflict of interest: cannot verify your own property');
-        }
-
-        $tx = Yii::$app->db->beginTransaction();
         try {
-            $case->state = VerificationCase::CLAIMED;
-            $case->assigned_verifier_id = $this->user()->id;
-            $case->claimed_at = gmdate('Y-m-d H:i:s');
-            $case->sla_due_at = gmdate('Y-m-d H:i:s', time() + (int) Yii::$app->params['sla']['decideHours'] * 3600);
-            $case->save(false);
-            Property::updateAll(['status' => Property::IN_VERIFICATION], ['id' => $case->property_id]);
-            $this->event($case->id, VerificationCase::UNCLAIMED, VerificationCase::CLAIMED, $this->user()->uuid);
-            OutboxService::emit('VerificationCase', (string) $case->id, 'Verification.CaseClaimed', ['caseId' => (int) $case->id]);
-            AuditService::log($this->user()->uuid, 'verification.claim', 'VerificationCase', (string) $case->id);
-            $tx->commit();
-        } catch (\Throwable $e) {
-            $tx->rollBack();
-            throw $e;
+            VerificationService::claim($case, $this->user());
+        } catch (ServiceException $e) {
+            return $this->serviceError($e);
         }
         return $this->ok(['caseId' => (int) $case->id, 'state' => $case->state]);
     }
@@ -93,34 +71,62 @@ class VerificationController extends BaseApiController
     public function actionView(int $id): array
     {
         $case = $this->case($id);
-        $this->assertAssignedOrOps($case);
-        $p = Property::findOne(['id' => $case->property_id]);
-        $owner = User::findOne(['id' => $case->owner_id]);
-        $checklist = (new \yii\db\Query())->from('verification_checklist_items')
-            ->where(['case_id' => $case->id])->orderBy(['id' => SORT_ASC])->all();
-        $docs = (new \yii\db\Query())->from('documents')->where(['property_id' => $p->id])
-            ->select(['id', 'doc_type', 'uploaded_at'])->all();
+        try {
+            VerificationService::assertCanAct($case, $this->user());
+        } catch (ServiceException $e) {
+            return $this->serviceError($e);
+        }
+        return $this->ok($this->caseDetail($case));
+    }
 
-        return $this->ok([
-            'caseId' => (int) $case->id,
-            'state' => $case->state,
-            'slaDueAt' => $case->sla_due_at,
-            'property' => $p->ownerView() + ['id' => $p->uuid],
-            // Owner contact is visible to the assigned verifier for the D-4 call (docs/03 §8.4)
-            'owner' => ['name' => $owner->name, 'phone' => $owner->phone, 'email' => $owner->email],
-            'checklist' => array_map(static fn ($c) => [
-                'itemKey' => $c['item_key'], 'mandatory' => (bool) $c['mandatory'],
-                'result' => $c['result'], 'note' => $c['note'],
-            ], $checklist),
-            'documents' => $docs, // metadata only; content via audited access endpoint
-        ]);
+    public function actionChecklist(int $id): array
+    {
+        $case = $this->case($id);
+        try {
+            VerificationService::saveChecklist($case, $this->body()['items'] ?? [], $this->user());
+        } catch (ServiceException $e) {
+            return $this->serviceError($e);
+        }
+        return $this->ok($this->caseDetail($case));
+    }
+
+    public function actionRequestInfo(int $id): array
+    {
+        $case = $this->case($id);
+        try {
+            VerificationService::requestInfo($case, $this->body()['reasonCode'] ?? null, $this->body()['note'] ?? null, $this->user());
+        } catch (ServiceException $e) {
+            return $this->serviceError($e);
+        }
+        return $this->ok(['caseId' => (int) $case->id, 'state' => $case->state]);
+    }
+
+    public function actionDecision(int $id): array
+    {
+        $case = $this->case($id);
+        try {
+            $result = VerificationService::decide(
+                $case,
+                (string) ($this->body()['decision'] ?? ''),
+                $this->body()['reasonCode'] ?? null,
+                $this->body()['note'] ?? null,
+                $this->user(),
+            );
+        } catch (ServiceException $e) {
+            return $this->serviceError($e);
+        }
+        return $this->ok(['caseId' => (int) $case->id] + $result);
     }
 
     /** Audited sensitive-document access (docs/10 §7). Returns the file stream. */
-    public function actionDocumentAccess(int $id, int $docId): Response
+    public function actionDocumentAccess(int $id, int $docId): Response|array
     {
         $case = $this->case($id);
-        $this->assertAssignedOrOps($case);
+        try {
+            VerificationService::assertCanAct($case, $this->user());
+        } catch (ServiceException $e) {
+            return $this->serviceError($e);
+        }
         $doc = (new \yii\db\Query())->from('documents')
             ->where(['id' => $docId, 'property_id' => $case->property_id])->one();
         if (!$doc) {
@@ -130,166 +136,10 @@ class VerificationController extends BaseApiController
         if (!is_file($path)) {
             throw new NotFoundHttpException('Document content missing');
         }
-        // MANDATORY audit of every sensitive-doc access (docs/07 BR-07.4, docs/10)
         AuditService::log($this->user()->uuid, 'document.access', 'Document', (string) $docId, [
             'caseId' => (int) $case->id, 'docType' => $doc['doc_type'],
         ]);
         return Yii::$app->response->sendFile($path, 'document-' . $docId, ['inline' => true]);
-    }
-
-    public function actionChecklist(int $id): array
-    {
-        $case = $this->case($id);
-        $this->assertAssignedOrOps($case);
-        $items = $this->body()['items'] ?? [];
-        foreach ($items as $item) {
-            if (!isset($item['itemKey'], $item['result'])) {
-                continue;
-            }
-            if (!in_array($item['result'], ['PASS', 'FAIL', 'NA', 'PENDING'], true)) {
-                return $this->unprocessable([['field' => 'result', 'issue' => 'invalid for ' . $item['itemKey']]]);
-            }
-            Yii::$app->db->createCommand()->update('verification_checklist_items', [
-                'result' => $item['result'],
-                'note' => $item['note'] ?? null,
-                'updated_by' => $this->user()->id,
-                'updated_at' => gmdate('Y-m-d H:i:s'),
-            ], ['case_id' => $case->id, 'item_key' => $item['itemKey']])->execute();
-        }
-        return $this->actionView($id);
-    }
-
-    public function actionRequestInfo(int $id): array
-    {
-        $case = $this->case($id);
-        $this->assertAssignedOrOps($case);
-        $reason = $this->body()['reasonCode'] ?? null;
-        $note = $this->body()['note'] ?? null;
-
-        $tx = Yii::$app->db->beginTransaction();
-        try {
-            $from = $case->state;
-            $case->state = VerificationCase::INFO_REQUESTED;
-            $case->save(false);
-            Property::updateAll(['status' => Property::INFO_REQUESTED], ['id' => $case->property_id]);
-            $this->event($case->id, $from, VerificationCase::INFO_REQUESTED, $this->user()->uuid, $reason);
-            $p = Property::findOne(['id' => $case->property_id]);
-            OutboxService::emit('VerificationCase', (string) $case->id, 'Verification.InfoRequested', [
-                'propertyId' => $p->uuid, 'reasonCode' => $reason, 'note' => $note,
-            ]);
-            AuditService::log($this->user()->uuid, 'verification.request_info', 'VerificationCase', (string) $case->id, ['reasonCode' => $reason]);
-            $tx->commit();
-        } catch (\Throwable $e) {
-            $tx->rollBack();
-            throw $e;
-        }
-        return $this->ok(['caseId' => (int) $case->id, 'state' => $case->state]);
-    }
-
-    /** Approve/Reject (docs/07 §6.4). Core invariant: publish only after approve (I-2). */
-    public function actionDecision(int $id): array
-    {
-        $case = $this->case($id);
-        $this->assertAssignedOrOps($case);
-        if ($case->state === VerificationCase::DECIDED) {
-            return $this->conflict('Case already decided');
-        }
-        if ($case->owner_id === $this->user()->id) {
-            throw new ForbiddenHttpException('Conflict of interest');
-        }
-
-        $decision = strtoupper((string) ($this->body()['decision'] ?? ''));
-        $reason = $this->body()['reasonCode'] ?? null;
-        $note = $this->body()['note'] ?? null;
-        if (!in_array($decision, ['APPROVED', 'REJECTED'], true)) {
-            return $this->unprocessable([['field' => 'decision', 'issue' => 'must be APPROVED or REJECTED']]);
-        }
-
-        $p = Property::findOne(['id' => $case->property_id]);
-
-        if ($decision === 'APPROVED') {
-            $pending = (new \yii\db\Query())->from('verification_checklist_items')
-                ->where(['case_id' => $case->id, 'mandatory' => 1])
-                ->andWhere(['not', ['result' => 'PASS']])->count();
-            if ((int) $pending > 0) {
-                return $this->unprocessable([['field' => 'checklist', 'issue' => "{$pending} mandatory item(s) not PASS"]], 'Cannot approve');
-            }
-            return $this->approve($case, $p, $note);
-        }
-
-        if (!$reason) {
-            return $this->unprocessable([['field' => 'reasonCode', 'issue' => 'required for rejection']]);
-        }
-        return $this->reject($case, $p, $reason, $note);
-    }
-
-    private function approve(VerificationCase $case, Property $p, ?string $note): array
-    {
-        $tx = Yii::$app->db->beginTransaction();
-        try {
-            $now = gmdate('Y-m-d H:i:s');
-            $case->state = VerificationCase::DECIDED;
-            $case->decision = 'APPROVED';
-            $case->decision_note = $note;
-            $case->decided_at = $now;
-            $case->save(false);
-
-            $p->status = Property::VERIFIED;
-            $p->verified_at = $now;
-            $p->save(false);
-
-            $listing = new Listing();
-            $listing->uuid = Uuid::v4();
-            $listing->property_id = $p->id;
-            $listing->slug = $this->uniqueSlug($p);
-            $listing->visibility = Listing::PUBLIC;
-            $listing->verified_at = $now;
-            $listing->verification_tier = 'STANDARD';
-            $listing->checks_performed_json = ['documents', 'identity', 'owner_call']; // D-4
-            $listing->published_at = $now;
-            $listing->canonical_url = '/property/' . $listing->slug;
-            $listing->save(false);
-
-            $p->status = Property::PUBLISHED;
-            $p->published_at = $now;
-            $p->save(false);
-
-            $this->event($case->id, VerificationCase::CLAIMED, VerificationCase::DECIDED, $this->user()->uuid);
-            OutboxService::emit('Property', $p->uuid, 'Verification.PropertyVerified', ['propertyId' => $p->uuid]);
-            OutboxService::emit('Listing', $listing->uuid, 'Publication.ListingPublished', [
-                'slug' => $listing->slug, 'propertyId' => $p->uuid, 'localityId' => $p->locality_id,
-            ]);
-            AuditService::log($this->user()->uuid, 'verification.approve', 'VerificationCase', (string) $case->id);
-            $tx->commit();
-            return $this->ok(['caseId' => (int) $case->id, 'decision' => 'APPROVED', 'slug' => $listing->slug, 'propertyStatus' => $p->status]);
-        } catch (\Throwable $e) {
-            $tx->rollBack();
-            throw $e;
-        }
-    }
-
-    private function reject(VerificationCase $case, Property $p, string $reason, ?string $note): array
-    {
-        $tx = Yii::$app->db->beginTransaction();
-        try {
-            $now = gmdate('Y-m-d H:i:s');
-            $case->state = VerificationCase::DECIDED;
-            $case->decision = 'REJECTED';
-            $case->reason_code = $reason;
-            $case->decision_note = $note;
-            $case->decided_at = $now;
-            $case->save(false);
-            $p->status = Property::REJECTED;
-            $p->save(false);
-            $this->event($case->id, VerificationCase::CLAIMED, VerificationCase::DECIDED, $this->user()->uuid, $reason);
-            OutboxService::emit('Property', $p->uuid, 'Verification.PropertyRejected', ['propertyId' => $p->uuid, 'reasonCode' => $reason]);
-            AuditService::log($this->user()->uuid, 'verification.reject', 'VerificationCase', (string) $case->id, ['reasonCode' => $reason]);
-            $tx->commit();
-            return $this->ok(['caseId' => (int) $case->id, 'decision' => 'REJECTED', 'reasonCode' => $reason, 'propertyStatus' => $p->status]);
-        } catch (\Throwable $e) {
-            $tx->rollBack();
-            throw $e;
-        }
     }
 
     // ---- helpers ----
@@ -303,26 +153,32 @@ class VerificationController extends BaseApiController
         return $case;
     }
 
-    private function assertAssignedOrOps(VerificationCase $case): void
+    private function caseDetail(VerificationCase $case): array
     {
-        $isAssigned = $case->assigned_verifier_id === $this->user()->id;
-        if (!$isAssigned && !$this->hasAnyRole(self::REASSIGN_ROLES)) {
-            throw new ForbiddenHttpException('Not assigned to this case');
-        }
+        $p = Property::findOne(['id' => $case->property_id]);
+        $owner = User::findOne(['id' => $case->owner_id]);
+        $checklist = (new \yii\db\Query())->from('verification_checklist_items')
+            ->where(['case_id' => $case->id])->orderBy(['id' => SORT_ASC])->all();
+        $docs = (new \yii\db\Query())->from('documents')->where(['property_id' => $p->id])
+            ->select(['id', 'doc_type', 'uploaded_at'])->all();
+
+        return [
+            'caseId' => (int) $case->id,
+            'state' => $case->state,
+            'slaDueAt' => $case->sla_due_at,
+            'property' => $p->ownerView() + ['id' => $p->uuid],
+            'owner' => ['name' => $owner->name, 'phone' => $owner->phone, 'email' => $owner->email],
+            'checklist' => array_map(static fn ($c) => [
+                'itemKey' => $c['item_key'], 'mandatory' => (bool) $c['mandatory'],
+                'result' => $c['result'], 'note' => $c['note'],
+            ], $checklist),
+            'documents' => $docs,
+        ];
     }
 
-    private function uniqueSlug(Property $p): string
+    private function serviceError(ServiceException $e): array
     {
-        $base = Inflector::slug($p->title . ' ' . strtolower($p->property_type) . ' for ' . strtolower($p->intent));
-        $slug = substr($base, 0, 180) . '-' . substr($p->uuid, 0, 8);
-        return $slug;
-    }
-
-    private function event(int|string $caseId, ?string $from, string $to, string $actorUuid, ?string $reason = null): void
-    {
-        Yii::$app->db->createCommand()->insert('verification_events', [
-            'case_id' => $caseId, 'from_state' => $from, 'to_state' => $to,
-            'actor_id' => $actorUuid, 'reason_code' => $reason,
-        ])->execute();
+        Yii::$app->response->statusCode = $e->httpStatus();
+        return ['error' => ['code' => $e->kind, 'message' => $e->getMessage(), 'details' => $e->details]];
     }
 }
