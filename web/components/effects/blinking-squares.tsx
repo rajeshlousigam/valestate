@@ -68,7 +68,7 @@ export function BlinkingSquares({ count = 90 }: { count?: number }) {
       <div className="absolute left-2/3 top-[-25%] h-[150%] w-px -rotate-[7deg] bg-fg/[0.01]" />
 
       {/* scattered twinkling property tiles (dimmed in light for readability) */}
-      <div className="absolute inset-0 opacity-50 dark:opacity-100">
+      <div className="absolute inset-0 opacity-50 dark:opacity-50">
         {tiles.map((t, i) => (
           <span
             key={i}
