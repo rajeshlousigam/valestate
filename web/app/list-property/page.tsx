@@ -4,6 +4,7 @@ import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Container, Eyebrow } from "@/components/ui/primitives";
+import { SpecularCTA } from "@/components/ui/specular-cta";
 
 export const metadata: Metadata = {
   title: "List your property",
@@ -30,9 +31,9 @@ export default function ListPropertyPage() {
           public — which is exactly why buyers trust it.
         </p>
         <div className="mt-8 flex flex-wrap justify-center gap-3">
-          <Link href="#" className={buttonVariants({ variant: "primary", size: "lg" })}>
+          <SpecularCTA size="lg" autoAnimate>
             Start listing
-          </Link>
+          </SpecularCTA>
           <Link href="/search" className={buttonVariants({ variant: "glass", size: "lg" })}>
             Browse listings
           </Link>

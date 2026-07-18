@@ -21,6 +21,7 @@ import { TrustPanel } from "@/components/property/trust-panel";
 import { buttonVariants } from "@/components/ui/button";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Container, SectionHeading } from "@/components/ui/primitives";
+import { SpecularCTA } from "@/components/ui/specular-cta";
 import { VerifiedBadge } from "@/components/ui/verified-badge";
 import { formatArea, formatINR, groupINR } from "@/lib/format";
 import { PROPERTIES, getProperty, similarProperties } from "@/lib/mock-data";
@@ -157,9 +158,9 @@ export default async function PropertyPage({
               </p>
             </div>
 
-            <button className={buttonVariants({ variant: "primary", size: "lg", className: "mt-4 w-full" })}>
+            <SpecularCTA size="lg" className="mt-4 w-full">
               Contact owner
-            </button>
+            </SpecularCTA>
             <button className={buttonVariants({ variant: "glass", size: "md", className: "mt-2 w-full" })}>
               Schedule a visit
             </button>

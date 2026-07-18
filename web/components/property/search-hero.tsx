@@ -3,8 +3,8 @@
 import { MapPin, Search } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/field";
+import { SpecularCTA } from "@/components/ui/specular-cta";
 import { LOCALITIES } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
 
@@ -98,10 +98,10 @@ export function SearchHero() {
           ))}
         </Select>
 
-        <Button size="lg" onClick={submit} className="md:px-8">
+        <SpecularCTA size="md" onClick={submit} className="justify-center md:px-8">
           <Search className="h-5 w-5" />
           <span className="md:hidden lg:inline">Search</span>
-        </Button>
+        </SpecularCTA>
       </div>
     </div>
   );

@@ -6,6 +6,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { Cover } from "@/components/ui/cover";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Container, Eyebrow, SectionHeading } from "@/components/ui/primitives";
+import { SpecularCTA } from "@/components/ui/specular-cta";
 import { VerifiedBadge } from "@/components/ui/verified-badge";
 import { LOCALITIES, PROPERTIES } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
@@ -190,9 +191,9 @@ export default function Home() {
                 Get the verified badge, reach genuine buyers, and manage every inquiry in one place.
               </p>
               <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-                <Link href="/list-property" className={buttonVariants({ variant: "primary", size: "lg" })}>
+                <SpecularCTA href="/list-property" size="lg">
                   List your property <ArrowRight className="h-5 w-5" />
-                </Link>
+                </SpecularCTA>
                 <Link href="/search" className={buttonVariants({ variant: "glass", size: "lg" })}>
                   Browse listings
                 </Link>

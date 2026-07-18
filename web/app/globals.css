@@ -2,59 +2,62 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ============ Design tokens (HousePoint "Liquid Glass") ============ */
+/* ============================================================
+   HousePoint — professional Manipur / Imphal palette
+   Loktak emerald + Kangla gold. Restrained, premium, glassy.
+   ============================================================ */
 @layer base {
   :root {
-    /* Light theme — soft, cool, luminous */
-    --bg: 205 45% 97%;
-    --surface: 210 40% 99%;
-    --fg: 222 35% 12%;
-    --muted: 218 14% 40%;
-    --subtle: 216 16% 58%;
-    --line: 220 20% 88%;
+    /* Light — warm ivory, pine ink, Loktak emerald, Kangla gold */
+    --bg: 45 33% 97%;
+    --surface: 45 40% 99%;
+    --fg: 165 26% 12%;
+    --muted: 170 12% 38%;
+    --subtle: 168 12% 55%;
+    --line: 150 16% 86%;
 
-    --brand: 174 78% 34%; /* jewel teal — trust / verified */
-    --brand-soft: 174 70% 92%;
-    --accent: 255 85% 64%; /* indigo-violet */
+    --brand: 168 74% 28%; /* Loktak emerald */
+    --brand-soft: 168 46% 90%;
+    --accent: 38 80% 44%; /* Kangla / temple gold */
 
-    --aurora-1: 174 80% 55%; /* teal */
-    --aurora-2: 255 90% 70%; /* violet */
-    --aurora-3: 320 90% 68%; /* pink */
+    --aurora-1: 168 70% 40%;
+    --aurora-2: 38 82% 55%;
+    --aurora-3: 158 55% 45%;
 
-    --success: 152 62% 42%;
-    --warning: 36 92% 52%;
+    --success: 152 60% 40%;
+    --warning: 32 90% 50%;
 
     --glass-bg: 255 255 255;
-    --glass-a: 0.6;
+    --glass-a: 0.62;
     --glass-border: 255 255 255;
-    --glass-border-a: 0.65;
+    --glass-border-a: 0.7;
 
     color-scheme: light;
   }
 
   .dark {
-    /* Dark theme — deep midnight glass with vivid glows */
-    --bg: 224 44% 6%;
-    --surface: 224 32% 11%;
-    --fg: 210 30% 96%;
-    --muted: 214 16% 68%;
-    --subtle: 216 14% 52%;
-    --line: 220 24% 22%;
+    /* Dark — deep forest night, luminous emerald, warm gold */
+    --bg: 172 34% 6%;
+    --surface: 172 24% 10%;
+    --fg: 150 20% 95%;
+    --muted: 160 12% 66%;
+    --subtle: 165 10% 50%;
+    --line: 165 18% 19%;
 
-    --brand: 168 82% 46%;
-    --brand-soft: 174 60% 16%;
-    --accent: 255 90% 74%;
+    --brand: 166 68% 44%;
+    --brand-soft: 168 42% 14%;
+    --accent: 40 86% 58%;
 
-    --aurora-1: 174 85% 45%;
-    --aurora-2: 258 90% 62%;
-    --aurora-3: 322 88% 58%;
+    --aurora-1: 166 68% 38%;
+    --aurora-2: 40 84% 52%;
+    --aurora-3: 158 55% 40%;
 
     --success: 152 58% 50%;
     --warning: 38 92% 58%;
 
-    --glass-bg: 255 255 255;
+    --glass-bg: 210 40% 96%;
     --glass-a: 0.06;
-    --glass-border: 255 255 255;
+    --glass-border: 210 40% 96%;
     --glass-border-a: 0.12;
 
     color-scheme: dark;
@@ -75,7 +78,6 @@
     background: hsl(var(--brand) / 0.25);
   }
 
-  /* Custom scrollbar */
   ::-webkit-scrollbar {
     width: 10px;
     height: 10px;
@@ -95,30 +97,30 @@
 /* ============ Glass + component utilities ============ */
 @layer components {
   .glass {
-    background: rgb(var(--glass-bg) / var(--glass-a));
+    background: hsl(var(--glass-bg) / var(--glass-a));
     -webkit-backdrop-filter: blur(20px) saturate(180%);
     backdrop-filter: blur(20px) saturate(180%);
-    border: 1px solid rgb(var(--glass-border) / var(--glass-border-a));
+    border: 1px solid hsl(var(--glass-border) / var(--glass-border-a));
     @apply shadow-glass;
   }
 
   .glass-panel {
-    background: rgb(var(--glass-bg) / calc(var(--glass-a) + 0.06));
+    background: hsl(var(--glass-bg) / calc(var(--glass-a) + 0.06));
     -webkit-backdrop-filter: blur(28px) saturate(190%);
     backdrop-filter: blur(28px) saturate(190%);
-    border: 1px solid rgb(var(--glass-border) / var(--glass-border-a));
+    border: 1px solid hsl(var(--glass-border) / var(--glass-border-a));
     @apply shadow-glass-lg;
   }
 
   .glass-nav {
-    background: rgb(var(--glass-bg) / calc(var(--glass-a) + 0.08));
+    background: hsl(var(--glass-bg) / calc(var(--glass-a) + 0.1));
     -webkit-backdrop-filter: blur(24px) saturate(180%);
     backdrop-filter: blur(24px) saturate(180%);
-    border-bottom: 1px solid rgb(var(--glass-border) / var(--glass-border-a));
+    border-bottom: 1px solid hsl(var(--glass-border) / var(--glass-border-a));
   }
 
   .glass-input {
-    background: rgb(var(--glass-bg) / calc(var(--glass-a) - 0.1));
+    background: hsl(var(--glass-bg) / calc(var(--glass-a) - 0.12));
     border: 1px solid hsl(var(--line));
     @apply transition-colors;
   }
@@ -129,25 +131,13 @@
   }
 
   .brand-gradient {
-    background-image: linear-gradient(
-      110deg,
-      hsl(var(--brand)),
-      hsl(var(--accent))
-    );
+    background-image: linear-gradient(110deg, hsl(var(--brand)), hsl(var(--accent)));
   }
   .brand-text {
-    background-image: linear-gradient(
-      110deg,
-      hsl(var(--brand)),
-      hsl(var(--accent))
-    );
+    background-image: linear-gradient(110deg, hsl(var(--brand)), hsl(var(--accent)));
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
-  }
-
-  .hairline {
-    border-color: rgb(var(--glass-border) / var(--glass-border-a));
   }
 
   .card-hover {
@@ -178,4 +168,98 @@
       animation: none !important;
     }
   }
+}
+
+/* ============================================================
+   React Bits — SideRays background
+   ============================================================ */
+.side-rays-container {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  pointer-events: none;
+  overflow: hidden;
+}
+.side-rays-container canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* ============================================================
+   React Bits — SpecularButton
+   ============================================================ */
+.specular-button {
+  --sb-radius: 18px;
+  --sb-tint: #ffffff;
+  --sb-tint-opacity: 0;
+  --sb-blur: 0px;
+  --sb-text-color: #f5f5f5;
+
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border: none;
+  margin: 0;
+  font-family: inherit;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  line-height: 1;
+  color: var(--sb-text-color);
+  background: color-mix(in srgb, var(--sb-tint) calc(var(--sb-tint-opacity) * 100%), transparent);
+  border-radius: var(--sb-radius);
+  backdrop-filter: blur(var(--sb-blur));
+  -webkit-backdrop-filter: blur(var(--sb-blur));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 10px 30px rgba(6, 40, 33, 0.28);
+  cursor: pointer;
+  outline: none;
+  transition: transform 0.15s ease;
+}
+.specular-button:active {
+  transform: scale(0.97);
+}
+.specular-button:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--sb-text-color) 60%, transparent);
+  outline-offset: 3px;
+}
+.specular-button:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+.specular-button:disabled:active {
+  transform: none;
+}
+.specular-button--sm {
+  font-size: 0.85rem;
+  padding: 10px 22px;
+}
+.specular-button--md {
+  font-size: 0.95rem;
+  padding: 13px 26px;
+}
+.specular-button--lg {
+  font-size: 1.1rem;
+  padding: 17px 38px;
+}
+.specular-button__fx {
+  position: absolute;
+  inset: -20px;
+  pointer-events: none;
+  z-index: 1;
+}
+.specular-button__fx canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.specular-button__label {
+  position: relative;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
 }

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { AuroraBackground } from "@/components/layout/aurora-background";
+import { RaysBackground } from "@/components/layout/rays-background";
 import { Footer } from "@/components/layout/footer";
 import { Navbar } from "@/components/layout/navbar";
 import { ThemeProvider, noFlashScript } from "@/components/theme/theme-provider";
@@ -30,7 +30,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="min-h-screen">
         <ThemeProvider>
-          <AuroraBackground />
+          <RaysBackground />
           <Navbar />
           <main>{children}</main>
           <Footer />

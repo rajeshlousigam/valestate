@@ -4,8 +4,8 @@ import { Menu, Plus, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { buttonVariants } from "@/components/ui/button";
 import { Container } from "@/components/ui/primitives";
+import { SpecularCTA } from "@/components/ui/specular-cta";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { cn } from "@/lib/utils";
 import { Logo } from "./logo";
@@ -44,10 +44,10 @@ export function Navbar() {
           </nav>
 
           <div className="flex items-center gap-2">
-            <Link href="/list-property" className={cn(buttonVariants({ variant: "primary", size: "sm" }), "hidden sm:inline-flex")}>
+            <SpecularCTA href="/list-property" size="sm" className="hidden sm:inline-flex">
               <Plus className="h-4 w-4" />
               List property
-            </Link>
+            </SpecularCTA>
             <ThemeToggle />
             <button
               type="button"
@@ -76,13 +76,14 @@ export function Navbar() {
                   {item.label}
                 </Link>
               ))}
-              <Link
+              <SpecularCTA
                 href="/list-property"
+                size="md"
+                className="mt-1 w-full"
                 onClick={() => setOpen(false)}
-                className={cn(buttonVariants({ variant: "primary", size: "md" }), "mt-1")}
               >
                 <Plus className="h-4 w-4" /> List your property
-              </Link>
+              </SpecularCTA>
             </div>
           </Container>
         </div>
