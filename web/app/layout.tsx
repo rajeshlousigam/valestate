@@ -1,14 +1,17 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { AuroraBackground } from "@/components/layout/aurora-background";
+import { Footer } from "@/components/layout/footer";
+import { Navbar } from "@/components/layout/navbar";
+import { ThemeProvider, noFlashScript } from "@/components/theme/theme-provider";
 
 export const metadata: Metadata = {
-  // SEO baseline (docs/11)
   title: {
     default: "HousePoint — Verified properties in Imphal",
     template: "%s | HousePoint",
   },
   description:
-    "Every property on HousePoint is verified by our operations team before it goes public. No fakes, no duplicates, no brokers.",
+    "Every property on HousePoint is verified by our operations team before it goes public. No fakes, no duplicates, no brokers — in Imphal, Manipur.",
   metadataBase: new URL("http://localhost:3000"),
   openGraph: {
     title: "HousePoint — Verified properties in Imphal",
@@ -19,14 +22,20 @@ export const metadata: Metadata = {
   robots: { index: true, follow: true },
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en-IN">
-      <body>{children}</body>
+    <html lang="en-IN" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: noFlashScript }} />
+      </head>
+      <body className="min-h-screen">
+        <ThemeProvider>
+          <AuroraBackground />
+          <Navbar />
+          <main>{children}</main>
+          <Footer />
+        </ThemeProvider>
+      </body>
     </html>
   );
 }
