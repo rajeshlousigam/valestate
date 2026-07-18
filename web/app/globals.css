@@ -8,57 +8,53 @@
    ============================================================ */
 @layer base {
   :root {
-    /* Light — warm ivory, pine ink, Loktak emerald, Kangla gold */
-    --bg: 45 33% 97%;
-    --surface: 45 40% 99%;
-    --fg: 165 26% 12%;
-    --muted: 170 12% 38%;
-    --subtle: 168 12% 55%;
-    --line: 150 16% 86%;
+    /* Light — clean cool neutral, deep slate ink; emerald primary, gold sparing */
+    --bg: 196 28% 97%;
+    --surface: 0 0% 100%;
+    --fg: 200 30% 13%;
+    --muted: 200 14% 36%;
+    --subtle: 200 12% 52%;
+    --line: 200 18% 84%;
+    --field: 200 20% 68%; /* clearly visible input border */
 
-    --brand: 168 74% 28%; /* Loktak emerald */
-    --brand-soft: 168 46% 90%;
-    --accent: 38 80% 44%; /* Kangla / temple gold */
-
-    --aurora-1: 168 70% 40%;
-    --aurora-2: 38 82% 55%;
-    --aurora-3: 158 55% 45%;
+    --brand: 170 78% 30%; /* emerald */
+    --brand-2: 190 82% 36%; /* teal — gradient partner */
+    --brand-soft: 174 44% 91%;
+    --accent: 40 84% 45%; /* gold — verified accents only */
 
     --success: 152 60% 40%;
     --warning: 32 90% 50%;
 
-    --glass-bg: 255 255 255;
-    --glass-a: 0.62;
-    --glass-border: 255 255 255;
-    --glass-border-a: 0.7;
+    --glass-bg: 0 0% 100%;
+    --glass-a: 0.72;
+    --glass-border: 200 24% 100%;
+    --glass-border-a: 0.9;
 
     color-scheme: light;
   }
 
   .dark {
-    /* Dark — deep forest night, luminous emerald, warm gold */
-    --bg: 172 34% 6%;
-    --surface: 172 24% 10%;
-    --fg: 150 20% 95%;
-    --muted: 160 12% 66%;
-    --subtle: 165 10% 50%;
-    --line: 165 18% 19%;
+    /* Dark — deep teal-charcoal, luminous emerald; gold as accent */
+    --bg: 197 32% 7%;
+    --surface: 198 24% 11%;
+    --fg: 195 22% 96%;
+    --muted: 196 13% 68%;
+    --subtle: 196 11% 52%;
+    --line: 198 20% 22%;
+    --field: 196 15% 40%; /* visible input border on dark */
 
-    --brand: 166 68% 44%;
-    --brand-soft: 168 42% 14%;
-    --accent: 40 86% 58%;
-
-    --aurora-1: 166 68% 38%;
-    --aurora-2: 40 84% 52%;
-    --aurora-3: 158 55% 40%;
+    --brand: 166 72% 47%;
+    --brand-2: 188 78% 52%;
+    --brand-soft: 190 40% 15%;
+    --accent: 42 88% 60%;
 
     --success: 152 58% 50%;
     --warning: 38 92% 58%;
 
-    --glass-bg: 210 40% 96%;
-    --glass-a: 0.06;
-    --glass-border: 210 40% 96%;
-    --glass-border-a: 0.12;
+    --glass-bg: 197 30% 90%;
+    --glass-a: 0.07;
+    --glass-border: 197 40% 96%;
+    --glass-border-a: 0.14;
 
     color-scheme: dark;
   }
@@ -98,43 +94,49 @@
 @layer components {
   .glass {
     background: hsl(var(--glass-bg) / var(--glass-a));
-    -webkit-backdrop-filter: blur(20px) saturate(180%);
-    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(135%);
+    backdrop-filter: blur(16px) saturate(135%);
     border: 1px solid hsl(var(--glass-border) / var(--glass-border-a));
     @apply shadow-glass;
   }
 
   .glass-panel {
     background: hsl(var(--glass-bg) / calc(var(--glass-a) + 0.06));
-    -webkit-backdrop-filter: blur(28px) saturate(190%);
-    backdrop-filter: blur(28px) saturate(190%);
+    -webkit-backdrop-filter: blur(22px) saturate(140%);
+    backdrop-filter: blur(22px) saturate(140%);
     border: 1px solid hsl(var(--glass-border) / var(--glass-border-a));
     @apply shadow-glass-lg;
   }
 
   .glass-nav {
-    background: hsl(var(--glass-bg) / calc(var(--glass-a) + 0.1));
-    -webkit-backdrop-filter: blur(24px) saturate(180%);
-    backdrop-filter: blur(24px) saturate(180%);
+    background: hsl(var(--glass-bg) / calc(var(--glass-a) + 0.14));
+    -webkit-backdrop-filter: blur(18px) saturate(135%);
+    backdrop-filter: blur(18px) saturate(135%);
     border-bottom: 1px solid hsl(var(--glass-border) / var(--glass-border-a));
   }
 
   .glass-input {
-    background: hsl(var(--glass-bg) / calc(var(--glass-a) - 0.12));
-    border: 1px solid hsl(var(--line));
+    background: hsl(var(--surface) / 0.55);
+    border: 1.5px solid hsl(var(--field));
     @apply transition-colors;
+  }
+  .dark .glass-input {
+    background: hsl(var(--surface) / 0.5);
+  }
+  .glass-input:hover {
+    border-color: hsl(var(--field) / 0.75);
   }
   .glass-input:focus-within,
   .glass-input:focus {
-    border-color: hsl(var(--brand) / 0.6);
-    box-shadow: 0 0 0 4px hsl(var(--brand) / 0.12);
+    border-color: hsl(var(--brand));
+    box-shadow: 0 0 0 3px hsl(var(--brand) / 0.18);
   }
 
   .brand-gradient {
-    background-image: linear-gradient(110deg, hsl(var(--brand)), hsl(var(--accent)));
+    background-image: linear-gradient(115deg, hsl(var(--brand)), hsl(var(--brand-2)));
   }
   .brand-text {
-    background-image: linear-gradient(110deg, hsl(var(--brand)), hsl(var(--accent)));
+    background-image: linear-gradient(115deg, hsl(var(--brand)), hsl(var(--brand-2)));
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;

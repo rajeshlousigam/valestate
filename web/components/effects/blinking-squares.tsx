@@ -37,15 +37,15 @@ function generate(count: number): Tile[] {
   const rnd = mulberry32(20260718);
   const tiles: Tile[] = [];
   for (let i = 0; i < count; i++) {
-    const verified = rnd() > 0.84;
+    const verified = rnd() > 0.9;
     tiles.push({
       x: rnd() * 100,
       y: rnd() * 100,
-      size: 9 + Math.round(rnd() * (verified ? 20 : 24)),
-      delay: rnd() * 6,
-      dur: 3 + rnd() * 4.5,
-      tmin: 0.04 + rnd() * 0.08,
-      tmax: (verified ? 0.4 : 0.22) + rnd() * 0.25,
+      size: 8 + Math.round(rnd() * (verified ? 16 : 20)),
+      delay: rnd() * 7,
+      dur: 3.5 + rnd() * 5,
+      tmin: 0.03 + rnd() * 0.05,
+      tmax: (verified ? 0.28 : 0.14) + rnd() * 0.14,
       rot: rnd() * 10 - 5,
       verified,
     });
@@ -53,22 +53,22 @@ function generate(count: number): Tile[] {
   return tiles;
 }
 
-export function BlinkingSquares({ count = 150 }: { count?: number }) {
+export function BlinkingSquares({ count = 90 }: { count?: number }) {
   const tiles = useMemo(() => generate(count), [count]);
 
   return (
     <div aria-hidden className="pointer-events-none fixed inset-0 -z-10 overflow-hidden bg-bg">
       {/* map grid */}
-      <div className="absolute inset-0 text-fg opacity-[0.05] dark:opacity-[0.07] [background-image:linear-gradient(to_right,currentColor_1px,transparent_1px),linear-gradient(to_bottom,currentColor_1px,transparent_1px)] [background-size:46px_46px]" />
+      <div className="absolute inset-0 text-fg opacity-[0.01] dark:opacity-[0.01] [background-image:linear-gradient(to_right,currentColor_1px,transparent_1px),linear-gradient(to_bottom,currentColor_1px,transparent_1px)] [background-size:46px_46px]" />
 
       {/* faint 'roads' crossing the map */}
-      <div className="absolute -left-1/4 top-1/3 h-px w-[150%] rotate-[8deg] bg-fg/[0.06]" />
-      <div className="absolute -left-1/4 top-2/3 h-px w-[150%] -rotate-[5deg] bg-fg/[0.05]" />
-      <div className="absolute left-1/3 top-[-25%] h-[150%] w-px rotate-[10deg] bg-fg/[0.05]" />
-      <div className="absolute left-2/3 top-[-25%] h-[150%] w-px -rotate-[7deg] bg-fg/[0.05]" />
+      <div className="absolute -left-1/4 top-1/3 h-px w-[150%] rotate-[8deg] bg-fg/[0.01]" />
+      <div className="absolute -left-1/4 top-2/3 h-px w-[150%] -rotate-[5deg] bg-fg/[0.01]" />
+      <div className="absolute left-1/3 top-[-25%] h-[150%] w-px rotate-[10deg] bg-fg/[0.01]" />
+      <div className="absolute left-2/3 top-[-25%] h-[150%] w-px -rotate-[7deg] bg-fg/[0.01]" />
 
-      {/* scattered twinkling property tiles */}
-      <div className="absolute inset-0">
+      {/* scattered twinkling property tiles (dimmed in light for readability) */}
+      <div className="absolute inset-0 opacity-50 dark:opacity-100">
         {tiles.map((t, i) => (
           <span
             key={i}
