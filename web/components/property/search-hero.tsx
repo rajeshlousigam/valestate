@@ -67,7 +67,7 @@ export function SearchHero() {
       {/* fields */}
       <div className="grid gap-2.5 p-1 md:grid-cols-[1.4fr_1fr_1fr_auto]">
         <div className="glass-input flex items-center gap-2 rounded-2xl px-4">
-          <MapPin className="h-4.5 w-4.5 shrink-0 text-brand" />
+          <MapPin className="h-5 w-5 shrink-0 text-brand" />
           <select
             value={locality}
             onChange={(e) => setLocality(e.target.value)}

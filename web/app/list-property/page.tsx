@@ -31,7 +31,7 @@ export default function ListPropertyPage() {
           public — which is exactly why buyers trust it.
         </p>
         <div className="mt-8 flex flex-wrap justify-center gap-3">
-          <SpecularCTA size="lg" autoAnimate>
+          <SpecularCTA size="lg" autoAnimate href="/list-property/new">
             Start listing
           </SpecularCTA>
           <Link href="/search" className={buttonVariants({ variant: "glass", size: "lg" })}>

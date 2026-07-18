@@ -25,7 +25,7 @@ export function TrustPanel({ property }: { property: Property }) {
       <ul className="mt-5 space-y-2.5">
         {property.verifiedChecks.map((check) => (
           <li key={check} className="flex items-center gap-2.5 text-sm">
-            <BadgeCheck className="h-4.5 w-4.5 shrink-0 text-brand" />
+            <BadgeCheck className="h-5 w-5 shrink-0 text-brand" />
             <span className="text-fg/85">{check}</span>
           </li>
         ))}

@@ -81,7 +81,7 @@ export function SearchClient() {
       {/* search + sort bar */}
       <div className="glass-panel flex flex-col gap-3 rounded-4xl p-3 sm:flex-row sm:items-center">
         <div className="glass-input flex flex-1 items-center gap-2 rounded-2xl px-4">
-          <Search className="h-4.5 w-4.5 shrink-0 text-brand" />
+          <Search className="h-5 w-5 shrink-0 text-brand" />
           <input
             value={filters.q}
             onChange={(e) => set({ q: e.target.value })}
