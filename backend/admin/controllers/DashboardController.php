@@ -7,6 +7,7 @@ namespace app\admin\controllers;
 use app\models\Property;
 use app\models\VerificationCase;
 use Yii;
+use yii\db\Expression;
 use yii\db\Query;
 
 class DashboardController extends BaseAuthedController
@@ -28,16 +29,23 @@ class DashboardController extends BaseAuthedController
 
     public function actionIndex(): string
     {
-        $area = Yii::$app->request->get('area') ?: null;
+        $req = Yii::$app->request;
+        $area = $req->get('area') ?: null;
+        $locality = $req->get('locality') ?: null;
+        $days = (int) ($req->get('days') ?: 0);
+        $since = $days > 0 ? gmdate('Y-m-d H:i:s', time() - $days * 86400) : null;
 
-        // status distribution (region-filtered)
-        $statusRows = $this->propQuery($area)->select(['p.status AS s', 'COUNT(*) AS c'])->groupBy('p.status')->all();
+        // if a locality is drilled into, resolve its display name
+        $localityName = $locality
+            ? ((new Query())->select('name')->from('localities')->where(['slug' => $locality])->scalar() ?: $locality)
+            : null;
+
+        // ---- property status distribution ----
         $status = [];
-        foreach ($statusRows as $r) {
+        foreach ($this->propQuery($area, $locality, $since)->select(['p.status AS s', 'COUNT(*) AS c'])->groupBy('p.status')->all() as $r) {
             $status[$r['s']] = (int) $r['c'];
         }
         $g = static fn (string ...$keys) => array_sum(array_map(static fn ($k) => $status[$k] ?? 0, $keys));
-
         $kpis = [
             'total' => array_sum($status),
             'approved' => $g(Property::PUBLISHED),
@@ -45,72 +53,91 @@ class DashboardController extends BaseAuthedController
             'rejected' => $g(Property::REJECTED),
         ];
 
-        // verification queue funnel (open states)
-        $funnelRows = (new Query())->from('verification_cases vc')
-            ->innerJoin('properties p', 'p.id = vc.property_id')
-            ->leftJoin('localities loc', 'loc.id = p.locality_id')
-            ->leftJoin('localities area', 'area.id = loc.parent_id')
-            ->select(['vc.state AS s', 'COUNT(*) AS c'])
-            ->where(['vc.state' => VerificationCase::OPEN_STATES])
-            ->andFilterWhere(['area.name' => $area])
-            ->groupBy('vc.state')->all();
-        $funnel = [];
-        foreach ($funnelRows as $r) {
-            $funnel[$r['s']] = (int) $r['c'];
-        }
+        // ---- verification performance (SLA / throughput) ----
+        $decided = (int) $this->caseQuery($area, $locality, $since)->andWhere(['vc.state' => VerificationCase::DECIDED])->count();
+        $approved = (int) $this->caseQuery($area, $locality, $since)->andWhere(['vc.decision' => 'APPROVED'])->count();
+        $rejected = (int) $this->caseQuery($area, $locality, $since)->andWhere(['vc.decision' => 'REJECTED'])->count();
+        $avgTurn = $this->caseQuery($area, $locality, $since)
+            ->andWhere(['vc.state' => VerificationCase::DECIDED])
+            ->andWhere(['not', ['vc.claimed_at' => null]])
+            ->select(new Expression('AVG(TIMESTAMPDIFF(MINUTE, vc.claimed_at, vc.decided_at))'))->scalar();
+        $breachDecided = (int) $this->caseQuery($area, $locality, $since)
+            ->andWhere(['vc.state' => VerificationCase::DECIDED])
+            ->andWhere('vc.decided_at > vc.sla_due_at')->count();
+        $breachOpen = (int) $this->caseQuery($area, $locality, $since)
+            ->andWhere(['vc.state' => VerificationCase::OPEN_STATES])
+            ->andWhere('NOW() > vc.sla_due_at')->count();
+        $perf = [
+            'decided' => $decided,
+            'approvalRate' => $decided > 0 ? round(($approved / $decided) * 100) : 0,
+            'avgTurnMins' => $avgTurn !== null ? (int) round((float) $avgTurn) : null,
+            'slaBreaches' => $breachDecided + $breachOpen,
+        ];
+        $reasonRows = $this->caseQuery($area, $locality, $since)
+            ->andWhere(['vc.decision' => 'REJECTED'])->andWhere(['not', ['vc.reason_code' => null]])
+            ->select(['vc.reason_code AS r', 'COUNT(*) AS c'])->groupBy('vc.reason_code')
+            ->orderBy(['c' => SORT_DESC])->all();
 
-        // listings by locality (region-filtered, non-draft)
-        $byLocality = $this->propQuery($area)
+        // ---- listings by locality ----
+        $byLocality = $this->propQuery($area, $locality, $since)
             ->select(['loc.slug AS slug', 'loc.name AS name', 'COUNT(*) AS c'])
             ->andWhere(['not', ['p.status' => Property::DRAFT]])
             ->andWhere(['not', ['loc.slug' => null]])
-            ->groupBy(['loc.slug', 'loc.name'])
-            ->orderBy(['c' => SORT_DESC])->all();
+            ->groupBy(['loc.slug', 'loc.name'])->orderBy(['c' => SORT_DESC])->all();
 
-        // daily submissions (last 14 days)
-        $since = gmdate('Y-m-d', time() - 13 * 86400);
-        $dailyRows = $this->propQuery($area)
-            ->select(['DATE(p.created_at) AS d', 'COUNT(*) AS c'])
-            ->andWhere(['>=', 'p.created_at', $since])
-            ->groupBy('d')->all();
+        // ---- daily submissions (window = range, min 14 days) ----
+        $window = $days > 0 ? min(max($days, 7), 60) : 14;
+        $fromTs = time() - ($window - 1) * 86400;
         $dailyMap = [];
-        foreach ($dailyRows as $r) {
+        foreach ($this->propQuery($area, $locality, null)
+            ->select(['DATE(p.created_at) AS d', 'COUNT(*) AS c'])
+            ->andWhere(['>=', 'p.created_at', gmdate('Y-m-d', $fromTs)])
+            ->groupBy('d')->all() as $r) {
             $dailyMap[$r['d']] = (int) $r['c'];
         }
         $daily = [];
-        for ($i = 13; $i >= 0; $i--) {
+        for ($i = $window - 1; $i >= 0; $i--) {
             $d = gmdate('Y-m-d', time() - $i * 86400);
             $daily[] = ['date' => $d, 'c' => $dailyMap[$d] ?? 0];
         }
 
-        // map markers
+        // ---- map markers ----
         $map = [];
         foreach ($byLocality as $r) {
             if (isset(self::GEO[$r['slug']])) {
-                $map[] = ['name' => $r['name'], 'lat' => self::GEO[$r['slug']][0], 'lng' => self::GEO[$r['slug']][1], 'count' => (int) $r['c']];
+                $map[] = ['name' => $r['name'], 'slug' => $r['slug'], 'lat' => self::GEO[$r['slug']][0], 'lng' => self::GEO[$r['slug']][1], 'count' => (int) $r['c']];
             }
         }
 
         $areas = (new Query())->select('name')->from('localities')->where(['level' => 'AREA'])->orderBy(['name' => SORT_ASC])->column();
 
-        return $this->render('index', [
-            'me' => $this->me(),
-            'kpis' => $kpis,
-            'status' => $status,
-            'funnel' => $funnel,
-            'byLocality' => $byLocality,
-            'daily' => $daily,
-            'map' => $map,
-            'areas' => $areas,
-            'area' => $area,
-        ]);
+        return $this->render('index', compact('kpis', 'status', 'byLocality', 'daily', 'map', 'areas', 'area', 'days', 'perf', 'reasonRows', 'locality', 'localityName') + ['me' => $this->me()]);
     }
 
-    private function propQuery(?string $area): Query
+    private function propQuery(?string $area, ?string $locality, ?string $since): Query
     {
         $q = (new Query())->from('properties p')
             ->leftJoin('localities loc', 'loc.id = p.locality_id')
-            ->leftJoin('localities area', 'area.id = loc.parent_id');
-        return $q->andFilterWhere(['area.name' => $area]);
+            ->leftJoin('localities area', 'area.id = loc.parent_id')
+            ->andFilterWhere(['area.name' => $area])
+            ->andFilterWhere(['loc.slug' => $locality]);
+        if ($since) {
+            $q->andWhere(['>=', 'p.created_at', $since]);
+        }
+        return $q;
+    }
+
+    private function caseQuery(?string $area, ?string $locality, ?string $since): Query
+    {
+        $q = (new Query())->from('verification_cases vc')
+            ->innerJoin('properties p', 'p.id = vc.property_id')
+            ->leftJoin('localities loc', 'loc.id = p.locality_id')
+            ->leftJoin('localities area', 'area.id = loc.parent_id')
+            ->andFilterWhere(['area.name' => $area])
+            ->andFilterWhere(['loc.slug' => $locality]);
+        if ($since) {
+            $q->andWhere(['>=', 'vc.created_at', $since]);
+        }
+        return $q;
     }
 }
