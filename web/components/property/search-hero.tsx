@@ -98,9 +98,9 @@ export function SearchHero() {
           ))}
         </Select>
 
-        <SpecularCTA size="md" onClick={submit} className="justify-center md:px-8">
+        <SpecularCTA size="md" onClick={submit} className="w-full justify-center md:w-auto md:px-8">
           <Search className="h-5 w-5" />
-          <span className="md:hidden lg:inline">Search</span>
+          <span>Search</span>
         </SpecularCTA>
       </div>
     </div>

@@ -63,11 +63,17 @@
     border-color: hsl(var(--line));
   }
 
+  html {
+    overflow-x: clip;
+  }
+
   body {
     @apply bg-bg text-fg antialiased;
     font-feature-settings: "cv02", "cv03", "cv04", "ss01";
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
+    overflow-x: clip;
+    max-width: 100%;
   }
 
   ::selection {

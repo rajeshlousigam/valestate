@@ -54,24 +54,27 @@ export function Navbar() {
           </nav>
 
           <div className="flex items-center gap-2">
-            {user ? (
-              <>
-                <Link href="/account" className="glass hidden items-center gap-2 rounded-full px-4 py-2 text-sm font-medium sm:inline-flex">
-                  <User className="h-4 w-4 text-brand" /> {firstName}
+            {/* auth + primary CTA only on desktop; on mobile these live in the drawer */}
+            <div className="hidden items-center gap-2 lg:flex">
+              {user ? (
+                <>
+                  <Link href="/account" className="glass inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium">
+                    <User className="h-4 w-4 text-brand" /> {firstName}
+                  </Link>
+                  <button onClick={doLogout} aria-label="Log out" className="glass grid h-10 w-10 place-items-center rounded-full text-fg/70 hover:text-brand">
+                    <LogOut className="h-4 w-4" />
+                  </button>
+                </>
+              ) : (
+                <Link href="/login" className="rounded-full px-4 py-2 text-sm font-semibold text-fg/80 hover:text-brand">
+                  Log in
                 </Link>
-                <button onClick={doLogout} aria-label="Log out" className="glass hidden h-10 w-10 place-items-center rounded-full text-fg/70 hover:text-brand sm:grid">
-                  <LogOut className="h-4 w-4" />
-                </button>
-              </>
-            ) : (
-              <Link href="/login" className="hidden rounded-full px-4 py-2 text-sm font-semibold text-fg/80 hover:text-brand sm:inline-flex">
-                Log in
-              </Link>
-            )}
-            <SpecularCTA href="/list-property" size="sm" className="hidden sm:inline-flex">
-              <Plus className="h-4 w-4" />
-              List property
-            </SpecularCTA>
+              )}
+              <SpecularCTA href="/list-property" size="sm">
+                <Plus className="h-4 w-4" />
+                List property
+              </SpecularCTA>
+            </div>
             <ThemeToggle />
             <button
               type="button"
