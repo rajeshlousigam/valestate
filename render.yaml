@@ -27,15 +27,19 @@ services:
       - key: JWT_ALG
         value: HS256
       - key: DB_HOST
-        sync: false        # set to your external MySQL host
+        sync: false        # e.g. mysql-xxxx.aivencloud.com
       - key: DB_PORT
-        value: "3306"
+        sync: false        # Aiven uses a non-standard port (e.g. 17007)
       - key: DB_NAME
-        sync: false
+        sync: false        # Aiven default is "defaultdb"
       - key: DB_USER
-        sync: false
+        sync: false        # Aiven default is "avnadmin"
       - key: DB_PASSWORD
         sync: false
+      - key: DB_SSL
+        value: "1"         # Aiven requires TLS
+      - key: DB_SSL_VERIFY
+        value: "0"         # Aiven uses a private CA; pin via DB_SSL_CA to verify
       - key: DEFAULT_CITY
         value: imphal
       - key: DEFAULT_CURRENCY
