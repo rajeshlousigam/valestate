@@ -1,0 +1,66 @@
+# Render Blueprint — deploys the ValEstate admin console (and optionally the API).
+# Docs: https://render.com/docs/blueprint-spec
+#
+# NOTE: Render has no managed MySQL. Point DB_* at an external MySQL 8
+# (PlanetScale / Aiven / Railway / a Render private MySQL service). Redis is
+# optional for the admin (not used by it).
+
+services:
+  - type: web
+    name: valestate-admin
+    runtime: docker
+    dockerfilePath: ./infra/render/Dockerfile
+    dockerContext: .
+    plan: starter
+    healthCheckPath: /auth/login
+    envVars:
+      - key: APP_ROOT
+        value: admin
+      - key: YII_ENV
+        value: prod
+      - key: YII_DEBUG
+        value: "0"
+      - key: COOKIE_VALIDATION_KEY
+        generateValue: true
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_ALG
+        value: HS256
+      - key: DB_HOST
+        sync: false        # set to your external MySQL host
+      - key: DB_PORT
+        value: "3306"
+      - key: DB_NAME
+        sync: false
+      - key: DB_USER
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: DEFAULT_CITY
+        value: imphal
+      - key: DEFAULT_CURRENCY
+        value: INR
+      - key: DEFAULT_TIMEZONE
+        value: Asia/Kolkata
+      # First deploy only: set both to "1" to create schema + seed staff, then
+      # set back to "0" and redeploy.
+      - key: RUN_MIGRATIONS
+        value: "0"
+      - key: RUN_SEED
+        value: "0"
+
+  # Optional: the REST API (owners/buyers/mobile) from the SAME image.
+  # Uncomment to also host it; it needs Redis for health/rate-limit.
+  # - type: web
+  #   name: valestate-api
+  #   runtime: docker
+  #   dockerfilePath: ./infra/render/Dockerfile
+  #   dockerContext: .
+  #   plan: starter
+  #   healthCheckPath: /v1/health
+  #   envVars:
+  #     - key: APP_ROOT
+  #       value: web
+  #     - key: WEB_ORIGIN
+  #       value: https://your-web-app.vercel.app
+  #     # ...same DB_* / secrets as above, plus REDIS_HOST/REDIS_PORT
