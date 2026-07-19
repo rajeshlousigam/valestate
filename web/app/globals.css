@@ -196,8 +196,9 @@
   position: absolute;
   border-radius: 30%;
   box-shadow: inset 0 0 0 1px hsl(var(--fg) / 0.12);
-  animation: hp-twinkle var(--dur, 4s) ease-in-out infinite;
-  animation-delay: var(--delay, 0s);
+  /* start faint (not fully opaque) even before the delayed animation begins */
+  opacity: var(--tmin, 0.06);
+  animation: hp-twinkle var(--dur, 4s) ease-in-out var(--delay, 0s) infinite both;
   will-change: opacity, transform;
 }
 @media (prefers-reduced-motion: reduce) {
