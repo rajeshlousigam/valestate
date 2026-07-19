@@ -22,12 +22,13 @@ class HealthController extends Controller
             'redis' => $this->checkRedis(),
         ];
 
-        $ok = !in_array(false, array_column($checks, 'ok'), true);
+        // DB is required; Redis is optional (not provisioned on the free tier).
+        $ok = $checks['db']['ok'] === true;
         Yii::$app->response->statusCode = $ok ? 200 : 503;
 
         return [
-            'status' => $ok ? 'ok' : 'degraded',
-            'service' => 'housepoint-api',
+            'status' => $ok ? ($checks['redis']['ok'] ? 'ok' : 'ok-no-redis') : 'down',
+            'service' => 'valestate-api',
             'version' => 'v1',
             'city' => Yii::$app->params['launchCity']['city'] ?? null,
             'time' => gmdate('c'),

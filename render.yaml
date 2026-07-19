@@ -1,70 +1,72 @@
-# Render Blueprint — deploys the ValEstate admin console (and optionally the API).
+# Render Blueprint — ValEstate admin console + REST API (both free tier).
 # Docs: https://render.com/docs/blueprint-spec
 #
-# NOTE: Render has no managed MySQL. Point DB_* at an external MySQL 8
-# (PlanetScale / Aiven / Railway / a Render private MySQL service). Redis is
-# optional for the admin (not used by it).
+# DB: Render has no managed MySQL — point these at an external MySQL 8 (e.g.
+# Aiven free). Enter the DB_* values once (shared env group). Aiven requires TLS
+# (DB_SSL=1). Redis is optional and NOT used here (Key Value can be added later).
+#
+# Free-tier caveats: services sleep after ~15 min idle (cold start on next hit);
+# the container filesystem is EPHEMERAL, so uploaded photos/documents don't
+# persist across restarts and aren't shared between the two services — fine for
+# testing; use S3 for real document storage (docs/05, docs/10).
 
-services:
-  - type: web
-    name: valestate-admin
-    runtime: docker
-    dockerfilePath: ./infra/render/Dockerfile
-    dockerContext: .
-    plan: starter
-    healthCheckPath: /auth/login
+envVarGroups:
+  - name: valestate-db
     envVars:
-      - key: APP_ROOT
-        value: admin
-      - key: YII_ENV
-        value: prod
-      - key: YII_DEBUG
-        value: "0"
-      - key: COOKIE_VALIDATION_KEY
-        generateValue: true
-      - key: JWT_SECRET
-        generateValue: true
-      - key: JWT_ALG
-        value: HS256
       - key: DB_HOST
         sync: false        # e.g. mysql-xxxx.aivencloud.com
       - key: DB_PORT
         sync: false        # Aiven uses a non-standard port (e.g. 17007)
       - key: DB_NAME
-        sync: false        # Aiven default is "defaultdb"
+        sync: false        # Aiven default: defaultdb
       - key: DB_USER
-        sync: false        # Aiven default is "avnadmin"
+        sync: false        # Aiven default: avnadmin
       - key: DB_PASSWORD
         sync: false
       - key: DB_SSL
-        value: "1"         # Aiven requires TLS
+        value: "1"
       - key: DB_SSL_VERIFY
-        value: "0"         # Aiven uses a private CA; pin via DB_SSL_CA to verify
-      - key: DEFAULT_CITY
-        value: imphal
-      - key: DEFAULT_CURRENCY
-        value: INR
-      - key: DEFAULT_TIMEZONE
-        value: Asia/Kolkata
-      # First deploy only: set both to "1" to create schema + seed staff, then
-      # set back to "0" and redeploy.
-      - key: RUN_MIGRATIONS
-        value: "0"
-      - key: RUN_SEED
         value: "0"
 
-  # Optional: the REST API (owners/buyers/mobile) from the SAME image.
-  # Uncomment to also host it; it needs Redis for health/rate-limit.
-  # - type: web
-  #   name: valestate-api
-  #   runtime: docker
-  #   dockerfilePath: ./infra/render/Dockerfile
-  #   dockerContext: .
-  #   plan: starter
-  #   healthCheckPath: /v1/health
-  #   envVars:
-  #     - key: APP_ROOT
-  #       value: web
-  #     - key: WEB_ORIGIN
-  #       value: https://your-web-app.vercel.app
-  #     # ...same DB_* / secrets as above, plus REDIS_HOST/REDIS_PORT
+services:
+  # ---- Admin / verification console (session app) ----
+  - type: web
+    name: valestate-admin
+    runtime: docker
+    dockerfilePath: ./infra/render/Dockerfile
+    dockerContext: .
+    plan: free
+    healthCheckPath: /auth/login
+    envVars:
+      - fromGroup: valestate-db
+      - { key: APP_ROOT, value: admin }
+      - { key: YII_ENV, value: prod }
+      - { key: YII_DEBUG, value: "0" }
+      - { key: DEFAULT_CITY, value: imphal }
+      - { key: COOKIE_VALIDATION_KEY, generateValue: true }
+      # idempotent — creates schema + seeds roles/localities/staff on each boot
+      - { key: RUN_MIGRATIONS, value: "1" }
+      - { key: RUN_SEED, value: "1" }
+
+  # ---- REST API (owners/buyers/mobile + web app) ----
+  - type: web
+    name: valestate-api
+    runtime: docker
+    dockerfilePath: ./infra/render/Dockerfile
+    dockerContext: .
+    plan: free
+    healthCheckPath: /v1/health
+    envVars:
+      - fromGroup: valestate-db
+      - { key: APP_ROOT, value: web }
+      - { key: YII_ENV, value: prod }
+      - { key: YII_DEBUG, value: "0" }
+      - { key: DEFAULT_CITY, value: imphal }
+      - { key: COOKIE_VALIDATION_KEY, generateValue: true }
+      - { key: JWT_ALG, value: HS256 }
+      - { key: JWT_SECRET, generateValue: true }
+      # CORS: "*" allows any browser origin (testing). Set to your web app URL
+      # (e.g. https://valestate.vercel.app) to lock it down.
+      - { key: WEB_ORIGIN, value: "*" }
+      - { key: RUN_MIGRATIONS, value: "0" }
+      - { key: RUN_SEED, value: "0" }

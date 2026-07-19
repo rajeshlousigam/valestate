@@ -19,7 +19,7 @@ $config = [
         $req = Yii::$app->request;
         $res = Yii::$app->response;
         $origin = $req->headers->get('Origin');
-        if ($origin && in_array($origin, $allowedOrigins, true)) {
+        if ($origin && (in_array('*', $allowedOrigins, true) || in_array($origin, $allowedOrigins, true))) {
             $res->headers->set('Access-Control-Allow-Origin', $origin);
             $res->headers->set('Vary', 'Origin');
             $res->headers->set('Access-Control-Allow-Methods', 'GET, POST, PATCH, PUT, DELETE, OPTIONS');
