@@ -70,8 +70,24 @@ class InquiryController extends BaseApiController
     {
         $rows = (new \yii\db\Query())->from('inquiries i')
             ->innerJoin('listings l', 'l.id = i.listing_id')
-            ->select(['i.id', 'i.status', 'i.message', 'i.created_at', 'l.slug'])
+            ->innerJoin('properties p', 'p.id = l.property_id')
+            ->select(['i.id', 'i.status', 'i.message', 'i.created_at', 'l.slug', 'p.title'])
             ->where(['i.buyer_id' => $this->user()->id])
+            ->orderBy(['i.id' => SORT_DESC])->all();
+        return $this->ok($rows);
+    }
+
+    /** Owner's received leads (docs/14). Buyer contact is revealed to the owner post-inquiry. */
+    public function actionReceived(): array
+    {
+        $this->requireAnyRole(['owner']);
+        $rows = (new \yii\db\Query())->from('inquiries i')
+            ->innerJoin('listings l', 'l.id = i.listing_id')
+            ->innerJoin('properties p', 'p.id = l.property_id')
+            ->innerJoin('users b', 'b.id = i.buyer_id')
+            ->select(['i.id', 'i.status', 'i.message', 'i.created_at', 'l.slug', 'p.title',
+                'b.name AS buyerName', 'b.phone AS buyerPhone'])
+            ->where(['i.owner_id' => $this->user()->id])
             ->orderBy(['i.id' => SORT_DESC])->all();
         return $this->ok($rows);
     }

@@ -5,12 +5,32 @@ declare(strict_types=1);
 $params = require __DIR__ . '/params.php';
 $db = require __DIR__ . '/db.php';
 
+$allowedOrigins = array_filter(array_map('trim', explode(',', getenv('WEB_ORIGIN') ?: 'http://localhost:3000')));
+
 $config = [
     'id' => 'housepoint-api',
     'name' => 'ValEstate API',
     'basePath' => dirname(__DIR__),
     'timeZone' => 'UTC',
     'bootstrap' => ['log'],
+    // Global CORS: sets headers when the Origin is allow-listed and answers
+    // preflight before routing (avoids 404 on OPTIONS under strict parsing).
+    'on beforeRequest' => static function () use ($allowedOrigins): void {
+        $req = Yii::$app->request;
+        $res = Yii::$app->response;
+        $origin = $req->headers->get('Origin');
+        if ($origin && in_array($origin, $allowedOrigins, true)) {
+            $res->headers->set('Access-Control-Allow-Origin', $origin);
+            $res->headers->set('Vary', 'Origin');
+            $res->headers->set('Access-Control-Allow-Methods', 'GET, POST, PATCH, PUT, DELETE, OPTIONS');
+            $res->headers->set('Access-Control-Allow-Headers', 'Authorization, Content-Type, Idempotency-Key');
+            $res->headers->set('Access-Control-Max-Age', '3600');
+        }
+        if ($req->isOptions) {
+            $res->statusCode = 204;
+            Yii::$app->end();
+        }
+    },
     'aliases' => [
         '@app' => dirname(__DIR__),
     ],
@@ -115,6 +135,7 @@ $config = [
                 'POST   v1/listings/<slug:[\w\-]+>/inquiries' => 'inquiry/create',
                 'GET    v1/listings/<slug:[\w\-]+>' => 'catalog/view',
                 'GET    v1/inquiries/mine' => 'inquiry/mine',
+                'GET    v1/inquiries/received' => 'inquiry/received',
             ],
         ],
     ],
