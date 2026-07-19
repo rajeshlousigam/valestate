@@ -37,4 +37,16 @@ abstract class BaseAuthedController extends Controller
         $u = Yii::$app->user->identity;
         return $u;
     }
+
+    protected function hasAnyRole(array $roles): bool
+    {
+        return count(array_intersect($roles, $this->me()->getRoleKeys())) > 0;
+    }
+
+    protected function requireRoles(array $roles): void
+    {
+        if (!$this->hasAnyRole($roles)) {
+            throw new ForbiddenHttpException('This action requires: ' . implode(' / ', $roles));
+        }
+    }
 }

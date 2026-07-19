@@ -71,10 +71,19 @@ $user = Yii::$app->user->identity;
         <span class="mark">V</span> ValEstate <span class="muted" style="font-weight:600">Admin</span>
     </a>
     <?php if ($user): ?>
+        <?php $roles = $user->getRoleKeys(); $isAdmin = (bool) array_intersect(['admin', 'super_admin'], $roles); ?>
         <nav class="nav">
             <a href="<?= Url::to(['/dashboard/index']) ?>">Dashboard</a>
-            <a href="<?= Url::to(['/verification']) ?>">Verification queue</a>
+            <a href="<?= Url::to(['/verification']) ?>">Queue</a>
+            <a href="<?= Url::to(['/listings/published']) ?>">Published</a>
+            <a href="<?= Url::to(['/listings/rejected']) ?>">Rejected</a>
+            <a href="<?= Url::to(['/duplicates']) ?>">Duplicates</a>
+            <?php if ($isAdmin): ?><a href="<?= Url::to(['/users']) ?>">Users</a><?php endif; ?>
         </nav>
+    <?php else: ?>
+        <span></span>
+    <?php endif; ?>
+    <?php if ($user): ?>
         <div class="userbox">
             <span><?= Html::encode($user->name) ?> · <?= Html::encode(implode(', ', $user->getRoleKeys())) ?></span>
             <?= Html::beginForm(['/auth/logout'], 'post', ['style' => 'margin:0']) ?>

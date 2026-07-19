@@ -67,6 +67,19 @@ $config = [
                 'verification/<id:\d+>/decision' => 'verification/decision',
                 'verification/<id:\d+>/request-info' => 'verification/request-info',
                 'verification/<id:\d+>/document/<docId:\d+>' => 'verification/document',
+
+                'listings/published' => 'listings/published',
+                'listings/rejected' => 'listings/rejected',
+                'listings/reopen/<id:\d+>' => 'listings/reopen',
+                'listings/reverify/<id:\d+>' => 'listings/reverify',
+
+                'duplicates' => 'duplicates/scan',
+
+                'users' => 'users/index',
+                'users/create' => 'users/create',
+                'users/<id:\d+>/roles' => 'users/roles',
+                'users/<id:\d+>/status' => 'users/status',
+                'roles/create' => 'users/role-create',
             ],
         ],
     ],

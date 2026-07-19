@@ -31,6 +31,100 @@ final class VerificationService
         }
     }
 
+    /** Overturn/appeal + re-verification are ops-manager+ only (docs/07 §10, docs/12). */
+    private static function requireReassign(User $actor): void
+    {
+        if (count(array_intersect(self::REASSIGN_ROLES, $actor->getRoleKeys())) === 0) {
+            throw new ServiceException(ServiceException::FORBIDDEN, 'Requires Ops Manager or Admin');
+        }
+    }
+
+    /** Re-open a DECIDED case (e.g. overturn a rejection) so it can be reviewed again. */
+    public static function reopen(VerificationCase $case, User $actor): void
+    {
+        self::requireReassign($actor);
+        if ($case->state !== VerificationCase::DECIDED) {
+            throw new ServiceException(ServiceException::CONFLICT, 'Only a decided case can be re-opened');
+        }
+        $tx = Yii::$app->db->beginTransaction();
+        try {
+            $case->state = VerificationCase::CLAIMED;
+            $case->assigned_verifier_id = $actor->id;
+            $case->decision = null;
+            $case->reason_code = null;
+            $case->decision_note = null;
+            $case->decided_at = null;
+            $case->claimed_at = gmdate('Y-m-d H:i:s');
+            $case->sla_due_at = gmdate('Y-m-d H:i:s', time() + (int) Yii::$app->params['sla']['decideHours'] * 3600);
+            $case->save(false);
+            Property::updateAll(['status' => Property::IN_VERIFICATION], ['id' => $case->property_id]);
+            self::event($case->id, VerificationCase::DECIDED, VerificationCase::CLAIMED, $actor->uuid, 'REOPENED');
+            OutboxService::emit('VerificationCase', (string) $case->id, 'Verification.CaseReopened', ['caseId' => (int) $case->id]);
+            AuditService::log($actor->uuid, 'verification.reopen', 'VerificationCase', (string) $case->id);
+            $tx->commit();
+        } catch (\Throwable $e) {
+            $tx->rollBack();
+            throw $e;
+        }
+    }
+
+    /** Re-verify a PUBLISHED property: hide the listing and put it back in the queue (docs/07 §9). */
+    public static function reverify(Property $p, User $actor): VerificationCase
+    {
+        self::requireReassign($actor);
+        if (!in_array($p->status, [Property::PUBLISHED, Property::UNPUBLISHED], true)) {
+            throw new ServiceException(ServiceException::CONFLICT, 'Only a published property can be re-verified');
+        }
+        $tx = Yii::$app->db->beginTransaction();
+        try {
+            $now = gmdate('Y-m-d H:i:s');
+            $listing = Listing::findOne(['property_id' => $p->id]);
+            if ($listing && $listing->visibility === Listing::PUBLIC) {
+                $listing->visibility = Listing::HIDDEN;
+                $listing->unpublished_at = $now;
+                $listing->save(false);
+                OutboxService::emit('Listing', $listing->uuid, 'Publication.ListingUnpublished', ['slug' => $listing->slug, 'reason' => 'RE_VERIFICATION']);
+            }
+            $p->status = Property::RE_VERIFICATION;
+            $p->save(false);
+
+            $case = VerificationCase::find()->where(['property_id' => $p->id])->orderBy(['id' => SORT_DESC])->one();
+            if ($case) {
+                $case->state = VerificationCase::CLAIMED;
+                $case->assigned_verifier_id = $actor->id;
+                $case->decision = null;
+                $case->reason_code = null;
+                $case->decided_at = null;
+                $case->claimed_at = $now;
+                $case->sla_due_at = gmdate('Y-m-d H:i:s', time() + (int) Yii::$app->params['sla']['decideHours'] * 3600);
+                $case->save(false);
+                self::event($case->id, VerificationCase::DECIDED, VerificationCase::CLAIMED, $actor->uuid, 'REVERIFY');
+            } else {
+                $case = new VerificationCase();
+                $case->property_id = $p->id;
+                $case->owner_id = $p->owner_id;
+                $case->state = VerificationCase::CLAIMED;
+                $case->assigned_verifier_id = $actor->id;
+                $case->claimed_at = $now;
+                $case->sla_due_at = gmdate('Y-m-d H:i:s', time() + (int) Yii::$app->params['sla']['decideHours'] * 3600);
+                $case->save(false);
+                foreach (VerificationCase::checklistFor($p->property_type) as $key => $mandatory) {
+                    Yii::$app->db->createCommand()->insert('verification_checklist_items', [
+                        'case_id' => $case->id, 'item_key' => $key, 'mandatory' => $mandatory ? 1 : 0, 'result' => 'PENDING',
+                    ])->execute();
+                }
+                self::event($case->id, null, VerificationCase::CLAIMED, $actor->uuid, 'REVERIFY');
+            }
+            OutboxService::emit('VerificationCase', (string) $case->id, 'Verification.ReverificationStarted', ['propertyId' => $p->uuid]);
+            AuditService::log($actor->uuid, 'verification.reverify', 'Property', $p->uuid);
+            $tx->commit();
+            return $case;
+        } catch (\Throwable $e) {
+            $tx->rollBack();
+            throw $e;
+        }
+    }
+
     public static function claim(VerificationCase $case, User $actor): void
     {
         if ($case->state !== VerificationCase::UNCLAIMED) {
@@ -152,16 +246,21 @@ final class VerificationService
             $p->verified_at = $now;
             $p->save(false);
 
-            $listing = new Listing();
-            $listing->uuid = Uuid::v4();
-            $listing->property_id = $p->id;
-            $listing->slug = self::uniqueSlug($p);
+            // New listing on first approval; re-publish the existing one on a re-check.
+            $listing = Listing::findOne(['property_id' => $p->id]);
+            if ($listing === null) {
+                $listing = new Listing();
+                $listing->uuid = Uuid::v4();
+                $listing->property_id = $p->id;
+                $listing->slug = self::uniqueSlug($p);
+                $listing->verification_tier = 'STANDARD';
+                $listing->canonical_url = '/property/' . self::uniqueSlug($p);
+            }
             $listing->visibility = Listing::PUBLIC;
             $listing->verified_at = $now;
-            $listing->verification_tier = 'STANDARD';
             $listing->checks_performed_json = ['documents', 'identity', 'owner_call'];
             $listing->published_at = $now;
-            $listing->canonical_url = '/property/' . $listing->slug;
+            $listing->unpublished_at = null;
             $listing->save(false);
 
             $p->status = Property::PUBLISHED;

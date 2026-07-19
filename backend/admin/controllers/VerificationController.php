@@ -8,6 +8,7 @@ use app\models\Property;
 use app\models\User;
 use app\models\VerificationCase;
 use app\services\AuditService;
+use app\services\DuplicateService;
 use app\services\ServiceException;
 use app\services\StorageService;
 use app\services\VerificationService;
@@ -50,6 +51,8 @@ class VerificationController extends BaseAuthedController
             'case' => $case, 'p' => $p, 'owner' => $owner,
             'checklist' => $checklist, 'docs' => $docs, 'events' => $events,
             'canAct' => $this->canAct($case),
+            'canReopen' => $this->hasAnyRole(['ops_manager', 'admin', 'super_admin']),
+            'dupes' => DuplicateService::candidates($p),
         ]);
     }
 

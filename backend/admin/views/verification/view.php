@@ -157,8 +157,34 @@ $reasonCodes = [
                     <?php if ($case->reason_code): ?><dt>Reason</dt><dd><?= Html::encode($case->reason_code) ?></dd><?php endif; ?>
                     <dt>Decided at</dt><dd><?= Html::encode((string) $case->decided_at) ?></dd>
                 </dl>
+                <?php if ($canReopen): ?>
+                    <div class="divider"></div>
+                    <?= Html::beginForm(['/listings/reopen/' . $case->id], 'post', ['style' => 'margin:0']) ?>
+                    <button class="btn btn-primary" type="submit">Re-open for recheck</button>
+                    <span class="muted" style="font-size:12px; margin-left:8px;">Overturn / appeal — puts it back in your queue.</span>
+                    <?= Html::endForm() ?>
+                <?php endif; ?>
             </div>
         <?php endif; ?>
+
+        <!-- Duplicate check -->
+        <div class="panel" style="margin-top:16px;">
+            <h2>Duplicate check <span class="muted" style="font-weight:400;">(<?= count($dupes) ?> potential)</span></h2>
+            <?php if (!$dupes): ?>
+                <p class="muted">No likely duplicates in this locality.</p>
+            <?php else: ?>
+                <?php foreach ($dupes as $dup): ?>
+                    <div class="doc">
+                        <span>
+                            <strong><?= Html::encode($dup['property']->title) ?></strong>
+                            <span class="muted">· <?= Html::encode($dup['property']->status) ?></span>
+                            <div class="muted" style="font-size:12px;"><?= Html::encode(implode(' · ', $dup['reasons'])) ?></div>
+                        </span>
+                        <span class="pill pill-UNCLAIMED"><?= (int) $dup['score'] ?>% match</span>
+                    </div>
+                <?php endforeach; ?>
+            <?php endif; ?>
+        </div>
     </div>
 
     <!-- sidebar -->

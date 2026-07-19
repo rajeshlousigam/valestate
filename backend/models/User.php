@@ -44,7 +44,9 @@ class User extends ActiveRecord implements IdentityInterface
             [['email'], 'email'],
             [['email'], 'unique'],
             [['phone'], 'unique'],
-            [['name', 'email', 'phone'], 'trim'],
+            [['name', 'email'], 'trim'],
+            // Normalise empty phone to NULL so a missing phone never collides on the unique index.
+            [['phone'], 'filter', 'filter' => static fn ($v) => ($v === null || trim((string) $v) === '') ? null : trim((string) $v)],
             [['status'], 'in', 'range' => [
                 self::STATUS_REGISTERED, self::STATUS_ACTIVE, self::STATUS_SUSPENDED,
                 self::STATUS_DEACTIVATED, self::STATUS_BANNED,

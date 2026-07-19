@@ -26,6 +26,7 @@ class Property extends ActiveRecord
     public const DRAFT = 'DRAFT';
     public const SUBMITTED = 'SUBMITTED';
     public const IN_VERIFICATION = 'IN_VERIFICATION';
+    public const RE_VERIFICATION = 'RE_VERIFICATION';
     public const INFO_REQUESTED = 'INFO_REQUESTED';
     public const VERIFIED = 'VERIFIED';
     public const REJECTED = 'REJECTED';
