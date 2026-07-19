@@ -16,18 +16,18 @@ export function Gallery({ covers, alt = "" }: { covers: number[]; alt?: string }
         </div>
       </Cover>
       {covers.length > 1 && (
-        <div className="flex gap-3">
+        <div className="no-scrollbar flex gap-3 overflow-x-auto pb-1">
           {covers.map((c, i) => (
             <button
               key={i}
               type="button"
               onClick={() => setActive(i)}
               className={cn(
-                "overflow-hidden rounded-2xl ring-2 transition-all",
+                "shrink-0 overflow-hidden rounded-2xl ring-2 transition-all",
                 i === active ? "ring-brand" : "ring-transparent opacity-70 hover:opacity-100",
               )}
             >
-              <Cover index={c} rounded="rounded-2xl" className="h-16 w-24" overlay={false} />
+              <Cover index={c} rounded="rounded-2xl" className="h-16 w-24 sm:h-20 sm:w-28" overlay={false} />
             </button>
           ))}
         </div>

@@ -94,19 +94,19 @@ export default async function PropertyPage({
                 {p.type[0] + p.type.slice(1).toLowerCase()}
               </span>
             </div>
-            <h1 className="mt-3 text-3xl font-bold tracking-tight">{p.title}</h1>
-            <p className="mt-2 flex items-center gap-1.5 text-muted">
-              <MapPin className="h-4 w-4" /> {p.address}, {p.localityName}, Imphal
+            <h1 className="mt-3 text-balance text-2xl font-bold tracking-tight sm:text-3xl">{p.title}</h1>
+            <p className="mt-2 flex items-start gap-1.5 text-sm text-muted sm:text-base">
+              <MapPin className="mt-0.5 h-4 w-4 shrink-0" /> <span>{p.address}, {p.localityName}, Imphal</span>
             </p>
           </div>
 
           {/* specs */}
-          <GlassCard className="mt-6 grid grid-cols-2 gap-x-4 gap-y-5 p-6 sm:grid-cols-4">
+          <GlassCard className="mt-6 grid grid-cols-2 gap-x-4 gap-y-5 p-5 sm:grid-cols-4 sm:p-6">
             {specs.map((s) => (
-              <div key={s.label}>
+              <div key={s.label} className="min-w-0">
                 <s.icon className="h-5 w-5 text-brand" />
                 <p className="mt-2 text-xs text-subtle">{s.label}</p>
-                <p className="font-semibold">{s.value}</p>
+                <p className="break-words font-semibold">{s.value}</p>
               </div>
             ))}
           </GlassCard>
