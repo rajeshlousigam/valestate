@@ -1,5 +1,6 @@
-import { Bath, BedDouble, Heart, MapPin, Maximize } from "lucide-react";
+import { Bath, BedDouble, MapPin, Maximize } from "lucide-react";
 import Link from "next/link";
+import { SaveButton } from "@/components/property/save-button";
 import { Cover } from "@/components/ui/cover";
 import { VerifiedBadge } from "@/components/ui/verified-badge";
 import { formatArea, formatINR, formatRent, relativeDate } from "@/lib/format";
@@ -27,9 +28,16 @@ export function PropertyCard({ property, className }: { property: Property; clas
             <span className="rounded-full bg-black/25 px-2.5 py-1 text-xs font-medium text-white backdrop-blur-md">
               {property.intent === "RENT" ? "For Rent" : "For Sale"} · {TYPE_LABEL[property.type]}
             </span>
-            <span className="grid h-9 w-9 place-items-center rounded-full bg-white/20 text-white backdrop-blur-md transition-colors hover:bg-white/35">
-              <Heart className="h-4 w-4" />
-            </span>
+            <SaveButton
+              item={{
+                slug: property.slug,
+                title: property.title,
+                cover: property.cover,
+                price: property.price,
+                intent: property.intent,
+                locality: property.localityName,
+              }}
+            />
           </div>
           <div className="absolute inset-x-0 bottom-0 flex items-end justify-between p-4">
             <VerifiedBadge size="sm" className="bg-white/85 text-brand ring-white/60" />

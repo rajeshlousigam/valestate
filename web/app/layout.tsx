@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { AuthProvider } from "@/components/auth/auth-provider";
 import { BlinkingSquares } from "@/components/effects/blinking-squares";
 import { Footer } from "@/components/layout/footer";
 import { Navbar } from "@/components/layout/navbar";
@@ -30,10 +31,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="min-h-screen">
         <ThemeProvider>
-          <BlinkingSquares />
-          <Navbar />
-          <main>{children}</main>
-          <Footer />
+          <AuthProvider>
+            <BlinkingSquares />
+            <Navbar />
+            <main>{children}</main>
+            <Footer />
+          </AuthProvider>
         </ThemeProvider>
       </body>
     </html>

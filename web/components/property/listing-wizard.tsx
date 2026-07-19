@@ -18,6 +18,8 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useRef, useState } from "react";
+import { useAuth } from "@/components/auth/auth-provider";
+import { USE_API, api } from "@/lib/api";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { CheckboxRow } from "@/components/ui/checkbox";
 import { Chip } from "@/components/ui/chip";
@@ -46,9 +48,9 @@ type Draft = {
   bathrooms: string;
   furnishing: Furnishing | "";
   amenities: string[];
-  photos: { id: string; src: string }[];
-  ownershipDocs: string[];
-  identityDocs: string[];
+  photos: { id: string; src: string; file?: File }[];
+  ownershipDocs: { name: string; file: File }[];
+  identityDocs: { name: string; file: File }[];
 };
 
 const EMPTY: Draft = {
@@ -74,9 +76,13 @@ const EMPTY: Draft = {
 const STEPS = ["Type", "Location", "Details", "Photos", "Documents", "Review"] as const;
 
 export function ListingWizard() {
+  const { user } = useAuth();
+  const isOwnerAuthed = USE_API && !!user && user.roles.includes("owner");
   const [step, setStep] = useState(0);
   const [d, setD] = useState<Draft>(EMPTY);
   const [submitted, setSubmitted] = useState<{ caseId: string } | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const photoInput = useRef<HTMLInputElement>(null);
   const ownInput = useRef<HTMLInputElement>(null);
   const idInput = useRef<HTMLInputElement>(null);
@@ -105,14 +111,53 @@ export function ListingWizard() {
   }, [step, d, isResidential]);
 
   function next() {
-    if (!valid) return;
+    if (!valid || submitting) return;
     if (step < STEPS.length - 1) setStep((s) => s + 1);
-    else submit();
+    else void submit();
   }
-  function submit() {
-    // No API — simulate submission + verification-case creation.
-    const caseId = "VE-" + Math.random().toString(36).slice(2, 7).toUpperCase();
-    setSubmitted({ caseId });
+
+  async function submit() {
+    // Demo mode (or not an owner): simulate a submission.
+    if (!isOwnerAuthed) {
+      setSubmitted({ caseId: "VE-" + Math.random().toString(36).slice(2, 7).toUpperCase() });
+      return;
+    }
+    // Real submission against the API (needs actual uploaded files for I-1).
+    if (d.photos.filter((p) => p.file).length === 0) {
+      setSubmitError("Please upload at least one real photo — sample photos can’t be submitted to the live API.");
+      setStep(3);
+      return;
+    }
+    setSubmitting(true);
+    setSubmitError(null);
+    try {
+      const created = await api.createProperty({
+        type: d.type,
+        intent: d.intent,
+        title: d.title,
+        description: d.description || undefined,
+        priceMinor: Number(d.price) || 0,
+        depositMinor: d.deposit ? Number(d.deposit) : undefined,
+        areaValue: d.areaValue ? Number(d.areaValue) : undefined,
+        areaUnit: "sqft",
+        address: d.address || undefined,
+        pincode: d.pincode || undefined,
+        attributes:
+          d.type === "RESIDENTIAL"
+            ? { bedrooms: Number(d.bedrooms) || undefined, bathrooms: Number(d.bathrooms) || undefined, furnishing: d.furnishing || undefined }
+            : undefined,
+      });
+      const uuid = created.data.id as string;
+      for (const p of d.photos) if (p.file) await api.uploadMedia(uuid, p.file);
+      for (const doc of d.ownershipDocs) await api.uploadDoc(uuid, doc.file, "OWNERSHIP");
+      for (const doc of d.identityDocs) await api.uploadDoc(uuid, doc.file, "IDENTITY");
+      const sub = await api.submitProperty(uuid);
+      setSubmitted({ caseId: "CASE-" + (sub.data.verificationCaseId ?? "?") });
+    } catch (e) {
+      setSubmitError(e instanceof Error ? e.message : "Submission failed");
+    } finally {
+      setSubmitting(false);
+    }
   }
   function reset() {
     setD(EMPTY);
@@ -130,7 +175,7 @@ export function ListingWizard() {
   }
   function onPickPhotos(e: React.ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files ?? []);
-    const add = files.map((f, i) => ({ id: `f${Date.now()}-${i}`, src: URL.createObjectURL(f) }));
+    const add = files.map((f, i) => ({ id: `f${Date.now()}-${i}`, src: URL.createObjectURL(f), file: f }));
     set({ photos: [...d.photos, ...add] });
     e.target.value = "";
   }
@@ -327,9 +372,9 @@ export function ListingWizard() {
               files={d.ownershipDocs}
               required
               onPick={() => ownInput.current?.click()}
-              onRemove={(name) => set({ ownershipDocs: d.ownershipDocs.filter((x) => x !== name) })}
+              onRemove={(name) => set({ ownershipDocs: d.ownershipDocs.filter((x) => x.name !== name) })}
               inputRef={ownInput}
-              onFiles={(names) => set({ ownershipDocs: [...d.ownershipDocs, ...names] })}
+              onFiles={(files) => set({ ownershipDocs: [...d.ownershipDocs, ...files.map((f) => ({ name: f.name, file: f }))] })}
             />
             <div className="mt-4">
               <DocUpload
@@ -338,9 +383,9 @@ export function ListingWizard() {
                 subtitle="Aadhaar / PAN / Voter ID / Passport (optional now)"
                 files={d.identityDocs}
                 onPick={() => idInput.current?.click()}
-                onRemove={(name) => set({ identityDocs: d.identityDocs.filter((x) => x !== name) })}
+                onRemove={(name) => set({ identityDocs: d.identityDocs.filter((x) => x.name !== name) })}
                 inputRef={idInput}
-                onFiles={(names) => set({ identityDocs: [...d.identityDocs, ...names] })}
+                onFiles={(files) => set({ identityDocs: [...d.identityDocs, ...files.map((f) => ({ name: f.name, file: f }))] })}
               />
             </div>
             <p className="mt-5 flex items-start gap-2 rounded-2xl bg-brand-soft/50 p-3 text-xs text-fg/70">
@@ -353,22 +398,26 @@ export function ListingWizard() {
         {/* ---------------- STEP 5: Review ---------------- */}
         {step === 5 && <ReviewStep d={d} />}
 
+        {submitError && (
+          <div className="mt-6 rounded-2xl bg-red-500/10 px-4 py-3 text-sm text-red-500">{submitError}</div>
+        )}
+
         {/* ---- nav ---- */}
         <div className="mt-8 flex items-center justify-between gap-3 border-t border-line pt-6">
           <Button
             variant="ghost"
             onClick={() => setStep((s) => Math.max(0, s - 1))}
-            disabled={step === 0}
+            disabled={step === 0 || submitting}
             className={step === 0 ? "invisible" : ""}
           >
             <ArrowLeft className="h-4 w-4" /> Back
           </Button>
           <div className="flex items-center gap-3">
             {!valid && <span className="hidden text-xs text-subtle sm:inline">Complete this step to continue</span>}
-            <span className={valid ? "" : "pointer-events-none opacity-50"}>
+            <span className={valid && !submitting ? "" : "pointer-events-none opacity-50"}>
               <SpecularCTA size="md" onClick={next}>
                 {step === STEPS.length - 1 ? (
-                  <>Submit for verification <BadgeCheck className="h-4 w-4" /></>
+                  submitting ? "Submitting…" : (<>Submit for verification <BadgeCheck className="h-4 w-4" /></>)
                 ) : (
                   <>Continue <ArrowRight className="h-4 w-4" /></>
                 )}
@@ -430,12 +479,12 @@ function DocUpload({
   icon: typeof FileCheck2;
   title: string;
   subtitle: string;
-  files: string[];
+  files: { name: string; file: File }[];
   required?: boolean;
   onPick: () => void;
   onRemove: (name: string) => void;
   inputRef: React.RefObject<HTMLInputElement | null>;
-  onFiles: (names: string[]) => void;
+  onFiles: (files: File[]) => void;
 }) {
   return (
     <div className="rounded-2xl border border-line p-4">
@@ -461,18 +510,18 @@ function DocUpload({
           multiple
           hidden
           onChange={(e) => {
-            const names = Array.from(e.target.files ?? []).map((f) => f.name);
-            if (names.length) onFiles(names);
+            const picked = Array.from(e.target.files ?? []);
+            if (picked.length) onFiles(picked);
             e.target.value = "";
           }}
         />
       </div>
       {files.length > 0 && (
         <ul className="mt-3 space-y-1.5">
-          {files.map((name) => (
-            <li key={name} className="flex items-center justify-between gap-2 rounded-lg bg-fg/[0.04] px-3 py-1.5 text-sm">
-              <span className="flex items-center gap-2 truncate"><Check className="h-3.5 w-3.5 text-brand" /> {name}</span>
-              <button type="button" onClick={() => onRemove(name)} className="text-subtle hover:text-fg">
+          {files.map((f) => (
+            <li key={f.name} className="flex items-center justify-between gap-2 rounded-lg bg-fg/[0.04] px-3 py-1.5 text-sm">
+              <span className="flex items-center gap-2 truncate"><Check className="h-3.5 w-3.5 text-brand" /> {f.name}</span>
+              <button type="button" onClick={() => onRemove(f.name)} className="text-subtle hover:text-fg">
                 <Trash2 className="h-3.5 w-3.5" />
               </button>
             </li>

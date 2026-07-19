@@ -1,9 +1,10 @@
 "use client";
 
-import { Menu, Plus, X } from "lucide-react";
+import { LayoutGrid, LogOut, Menu, Plus, User, X } from "lucide-react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
+import { useAuth } from "@/components/auth/auth-provider";
 import { Container } from "@/components/ui/primitives";
 import { SpecularCTA } from "@/components/ui/specular-cta";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
@@ -21,6 +22,15 @@ const NAV = [
 export function Navbar() {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
+  const { user, logout } = useAuth();
+  const router = useRouter();
+  const firstName = user?.name?.split(" ")[0] ?? "Account";
+
+  async function doLogout() {
+    await logout();
+    setOpen(false);
+    router.push("/");
+  }
 
   return (
     <header className="sticky top-0 z-50">
@@ -44,6 +54,20 @@ export function Navbar() {
           </nav>
 
           <div className="flex items-center gap-2">
+            {user ? (
+              <>
+                <Link href="/account" className="glass hidden items-center gap-2 rounded-full px-4 py-2 text-sm font-medium sm:inline-flex">
+                  <User className="h-4 w-4 text-brand" /> {firstName}
+                </Link>
+                <button onClick={doLogout} aria-label="Log out" className="glass hidden h-10 w-10 place-items-center rounded-full text-fg/70 hover:text-brand sm:grid">
+                  <LogOut className="h-4 w-4" />
+                </button>
+              </>
+            ) : (
+              <Link href="/login" className="hidden rounded-full px-4 py-2 text-sm font-semibold text-fg/80 hover:text-brand sm:inline-flex">
+                Log in
+              </Link>
+            )}
             <SpecularCTA href="/list-property" size="sm" className="hidden sm:inline-flex">
               <Plus className="h-4 w-4" />
               List property
@@ -76,6 +100,21 @@ export function Navbar() {
                   {item.label}
                 </Link>
               ))}
+              <div className="my-1 h-px bg-line" />
+              {user ? (
+                <>
+                  <Link href="/account" onClick={() => setOpen(false)} className="flex items-center gap-2 rounded-2xl px-4 py-3 text-sm font-medium text-fg/80 hover:bg-fg/[0.06]">
+                    <LayoutGrid className="h-4 w-4 text-brand" /> My account
+                  </Link>
+                  <button onClick={doLogout} className="flex items-center gap-2 rounded-2xl px-4 py-3 text-left text-sm font-medium text-fg/80 hover:bg-fg/[0.06]">
+                    <LogOut className="h-4 w-4" /> Log out
+                  </button>
+                </>
+              ) : (
+                <Link href="/login" onClick={() => setOpen(false)} className="rounded-2xl px-4 py-3 text-sm font-medium text-fg/80 hover:bg-fg/[0.06]">
+                  Log in
+                </Link>
+              )}
               <SpecularCTA
                 href="/list-property"
                 size="md"
