@@ -73,13 +73,31 @@ class SiteController extends Controller
             return ['error' => 'Forbidden. Set the SETUP_KEY env var on the service and call /setup?key=THAT_VALUE.'];
         }
 
+        $steps = [];
+
+        // ?fresh=1 → drop all tables via SQL first (migrate/fresh is blocked in
+        // prod). Fixes a half-migrated DB. Destructive — throwaway DBs only.
+        if (Yii::$app->request->get('fresh')) {
+            try {
+                $db = Yii::$app->db;
+                $db->createCommand('SET FOREIGN_KEY_CHECKS=0')->execute();
+                $tables = $db->createCommand('SHOW TABLES')->queryColumn();
+                foreach ($tables as $t) {
+                    $db->createCommand('DROP TABLE IF EXISTS `' . $t . '`')->execute();
+                }
+                $db->createCommand('SET FOREIGN_KEY_CHECKS=1')->execute();
+                $db->schema->refresh();
+                $steps['drop'] = ['droppedTables' => count($tables)];
+            } catch (\Throwable $e) {
+                Yii::$app->response->statusCode = 500;
+                return ['error' => 'drop failed: ' . substr($e->getMessage(), 0, 200)];
+            }
+        }
+
         $php = is_file('/usr/local/bin/php') ? '/usr/local/bin/php' : 'php';
         $yii = Yii::getAlias('@app/yii');
-        // ?fresh=1 drops ALL tables first (fixes a half-migrated DB). Destructive.
-        $migrate = Yii::$app->request->get('fresh') ? 'migrate/fresh --interactive=0' : 'migrate --interactive=0';
-        $steps = [];
         foreach ([
-            'migrate' => $migrate,
+            'migrate' => 'migrate --interactive=0',
             'seed' => 'seed/launch-city --interactive=0',
             'demo' => 'demo/seed --interactive=0',
         ] as $name => $cmd) {
