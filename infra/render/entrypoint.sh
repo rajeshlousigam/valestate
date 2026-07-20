@@ -19,13 +19,14 @@ ServerName localhost
 EOF
 a2enconf veapp >/dev/null 2>&1 || true
 
-# DB setup on boot. Migrate + base seed default ON (idempotent) so the schema
-# and staff always exist; set RUN_MIGRATIONS/RUN_SEED=0 to disable. Demo is opt-in.
-if [ "${RUN_MIGRATIONS:-1}" = "1" ]; then
+# DB setup on boot is OFF by default to avoid racing a manual /setup run.
+# Initialise the DB ONCE via  /setup?key=$SETUP_KEY&fresh=1  (no shell needed).
+# You can still opt into boot init by setting RUN_MIGRATIONS/RUN_SEED/RUN_DEMO=1.
+if [ "${RUN_MIGRATIONS:-0}" = "1" ]; then
     echo "[entrypoint] running migrations…"
     php /var/www/app/yii migrate --interactive=0 || echo "[entrypoint] migrate FAILED"
 fi
-if [ "${RUN_SEED:-1}" = "1" ]; then
+if [ "${RUN_SEED:-0}" = "1" ]; then
     echo "[entrypoint] seeding roles/localities/staff…"
     php /var/www/app/yii seed/launch-city --interactive=0 || echo "[entrypoint] seed FAILED"
 fi

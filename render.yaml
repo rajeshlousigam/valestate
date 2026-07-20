@@ -45,13 +45,13 @@ services:
       - { key: YII_DEBUG, value: "0" }
       - { key: DEFAULT_CITY, value: imphal }
       - { key: COOKIE_VALIDATION_KEY, generateValue: true }
-      # idempotent — creates schema + seeds roles/localities/staff on each boot
-      - { key: RUN_MIGRATIONS, value: "1" }
-      - { key: RUN_SEED, value: "1" }
-      # demo data (populates the dashboard/queue/lists) — set to "0" for real use
-      - { key: RUN_DEMO, value: "1" }
-      # enables the /setup?key=... URL to (re)initialise the DB from the browser
-      # (no shell needed on free tier). Remove once initialised.
+      # Boot DB init is OFF (avoids racing the /setup URL). Initialise ONCE via
+      # /setup?key=$SETUP_KEY&fresh=1, then you're done — Aiven persists the data.
+      - { key: RUN_MIGRATIONS, value: "0" }
+      - { key: RUN_SEED, value: "0" }
+      - { key: RUN_DEMO, value: "0" }
+      # enables /setup?key=... to (re)initialise the DB from the browser (no shell
+      # needed on free tier). Remove once the DB is initialised.
       - { key: SETUP_KEY, sync: false }
 
   # ---- REST API (owners/buyers/mobile + web app) — OPTIONAL ----
