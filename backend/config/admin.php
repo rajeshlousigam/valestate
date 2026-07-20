@@ -59,6 +59,7 @@ $config = [
             'rules' => [
                 '' => 'dashboard/index',
                 'health' => 'site/health',
+                'setup' => 'site/setup',
                 'login' => 'auth/login',
                 'logout' => 'auth/logout',
                 'verification' => 'verification/queue',

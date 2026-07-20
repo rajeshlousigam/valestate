@@ -50,6 +50,9 @@ services:
       - { key: RUN_SEED, value: "1" }
       # demo data (populates the dashboard/queue/lists) — set to "0" for real use
       - { key: RUN_DEMO, value: "1" }
+      # enables the /setup?key=... URL to (re)initialise the DB from the browser
+      # (no shell needed on free tier). Remove once initialised.
+      - { key: SETUP_KEY, sync: false }
 
   # ---- REST API (owners/buyers/mobile + web app) — OPTIONAL ----
   # Uncomment this whole block to also host the API (needs the same DB group).

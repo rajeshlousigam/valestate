@@ -58,4 +58,36 @@ class SiteController extends Controller
         }
         return $out;
     }
+
+    /**
+     * One-time DB init from the web process (for hosts with no shell, e.g. Render
+     * free). Runs migrate + seed + demo via the CLI. Guarded by ?key=$SETUP_KEY.
+     * GET /setup?key=...
+     */
+    public function actionSetup(): array
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $key = (string) getenv('SETUP_KEY');
+        if ($key === '' || Yii::$app->request->get('key') !== $key) {
+            Yii::$app->response->statusCode = 403;
+            return ['error' => 'Forbidden. Set the SETUP_KEY env var on the service and call /setup?key=THAT_VALUE.'];
+        }
+
+        $php = is_file('/usr/local/bin/php') ? '/usr/local/bin/php' : 'php';
+        $yii = Yii::getAlias('@app/yii');
+        // ?fresh=1 drops ALL tables first (fixes a half-migrated DB). Destructive.
+        $migrate = Yii::$app->request->get('fresh') ? 'migrate/fresh --interactive=0' : 'migrate --interactive=0';
+        $steps = [];
+        foreach ([
+            'migrate' => $migrate,
+            'seed' => 'seed/launch-city --interactive=0',
+            'demo' => 'demo/seed --interactive=0',
+        ] as $name => $cmd) {
+            $o = [];
+            $c = 0;
+            @exec("{$php} " . escapeshellarg($yii) . " {$cmd} 2>&1", $o, $c);
+            $steps[$name] = ['exit' => $c, 'tail' => array_slice($o, -6)];
+        }
+        return ['ran' => true, 'steps' => $steps, 'next' => 'Check /health, then log in. Remove SETUP_KEY afterwards.'];
+    }
 }
