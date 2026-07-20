@@ -19,15 +19,19 @@ ServerName localhost
 EOF
 a2enconf veapp >/dev/null 2>&1 || true
 
-# One-off DB setup, controlled by env (run once, then set back to 0).
-if [ "${RUN_MIGRATIONS:-0}" = "1" ]; then
-    php /var/www/app/yii migrate --interactive=0 || echo "migrate: skipped/failed"
+# DB setup on boot. Migrate + base seed default ON (idempotent) so the schema
+# and staff always exist; set RUN_MIGRATIONS/RUN_SEED=0 to disable. Demo is opt-in.
+if [ "${RUN_MIGRATIONS:-1}" = "1" ]; then
+    echo "[entrypoint] running migrations…"
+    php /var/www/app/yii migrate --interactive=0 || echo "[entrypoint] migrate FAILED"
 fi
-if [ "${RUN_SEED:-0}" = "1" ]; then
-    php /var/www/app/yii seed/launch-city --interactive=0 || echo "seed: skipped/failed"
+if [ "${RUN_SEED:-1}" = "1" ]; then
+    echo "[entrypoint] seeding roles/localities/staff…"
+    php /var/www/app/yii seed/launch-city --interactive=0 || echo "[entrypoint] seed FAILED"
 fi
 if [ "${RUN_DEMO:-0}" = "1" ]; then
-    php /var/www/app/yii demo/seed --interactive=0 || echo "demo: skipped/failed"
+    echo "[entrypoint] seeding demo data…"
+    php /var/www/app/yii demo/seed --interactive=0 || echo "[entrypoint] demo FAILED"
 fi
 
 exec apache2-foreground
