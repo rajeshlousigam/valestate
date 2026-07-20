@@ -1,4 +1,5 @@
-# Render Blueprint — ValEstate admin console + REST API (both free tier).
+# Render Blueprint — ValEstate demo-data admin console (free tier).
+# The REST API service is commented out below; uncomment it to also host the API.
 # Docs: https://render.com/docs/blueprint-spec
 #
 # DB: Render has no managed MySQL — point these at an external MySQL 8 (e.g.
@@ -50,25 +51,24 @@ services:
       # demo data (populates the dashboard/queue/lists) — set to "0" for real use
       - { key: RUN_DEMO, value: "1" }
 
-  # ---- REST API (owners/buyers/mobile + web app) ----
-  - type: web
-    name: valestate-api
-    runtime: docker
-    dockerfilePath: ./infra/render/Dockerfile
-    dockerContext: .
-    plan: free
-    healthCheckPath: /v1/health
-    envVars:
-      - fromGroup: valestate-db
-      - { key: APP_ROOT, value: web }
-      - { key: YII_ENV, value: prod }
-      - { key: YII_DEBUG, value: "0" }
-      - { key: DEFAULT_CITY, value: imphal }
-      - { key: COOKIE_VALIDATION_KEY, generateValue: true }
-      - { key: JWT_ALG, value: HS256 }
-      - { key: JWT_SECRET, generateValue: true }
-      # CORS: "*" allows any browser origin (testing). Set to your web app URL
-      # (e.g. https://valestate.vercel.app) to lock it down.
-      - { key: WEB_ORIGIN, value: "*" }
-      - { key: RUN_MIGRATIONS, value: "0" }
-      - { key: RUN_SEED, value: "0" }
+  # ---- REST API (owners/buyers/mobile + web app) — OPTIONAL ----
+  # Uncomment this whole block to also host the API (needs the same DB group).
+  # - type: web
+  #   name: valestate-api
+  #   runtime: docker
+  #   dockerfilePath: ./infra/render/Dockerfile
+  #   dockerContext: .
+  #   plan: free
+  #   healthCheckPath: /v1/health
+  #   envVars:
+  #     - fromGroup: valestate-db
+  #     - { key: APP_ROOT, value: web }
+  #     - { key: YII_ENV, value: prod }
+  #     - { key: YII_DEBUG, value: "0" }
+  #     - { key: DEFAULT_CITY, value: imphal }
+  #     - { key: COOKIE_VALIDATION_KEY, generateValue: true }
+  #     - { key: JWT_ALG, value: HS256 }
+  #     - { key: JWT_SECRET, generateValue: true }
+  #     - { key: WEB_ORIGIN, value: "*" }
+  #     - { key: RUN_MIGRATIONS, value: "0" }
+  #     - { key: RUN_SEED, value: "0" }
