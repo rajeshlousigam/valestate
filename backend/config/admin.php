@@ -58,6 +58,7 @@ $config = [
             'enableStrictParsing' => false,
             'rules' => [
                 '' => 'dashboard/index',
+                'health' => 'site/health',
                 'login' => 'auth/login',
                 'logout' => 'auth/logout',
                 'verification' => 'verification/queue',
