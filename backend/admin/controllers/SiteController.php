@@ -104,7 +104,16 @@ class SiteController extends Controller
             $o = [];
             $c = 0;
             @exec("{$php} " . escapeshellarg($yii) . " {$cmd} 2>&1", $o, $c);
-            $steps[$name] = ['exit' => $c, 'tail' => array_slice($o, -6)];
+            $step = ['exit' => $c, 'tail' => array_slice($o, -8)];
+            if ($c !== 0) {
+                foreach ($o as $ln) {
+                    if (stripos($ln, 'SQLSTATE') !== false || stripos($ln, "with message") !== false) {
+                        $step['sqlError'] = substr($ln, 0, 500);
+                        break;
+                    }
+                }
+            }
+            $steps[$name] = $step;
         }
         return ['ran' => true, 'steps' => $steps, 'next' => 'Check /health, then log in. Remove SETUP_KEY afterwards.'];
     }
