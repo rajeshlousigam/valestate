@@ -34,11 +34,13 @@ class m240718_000001_init_iam extends Migration
             'name' => $this->string(80)->notNull(),
         ], $this->opts);
 
+        // PK inline (not a separate ALTER) so it satisfies sql_require_primary_key
+        // (enforced on managed MySQL like Aiven).
         $this->createTable('{{%user_roles}}', [
             'user_id' => $this->bigInteger()->unsigned()->notNull(),
             'role_id' => $this->integer()->notNull(),
+            'PRIMARY KEY(user_id, role_id)',
         ], $this->opts);
-        $this->addPrimaryKey('pk_user_roles', '{{%user_roles}}', ['user_id', 'role_id']);
         $this->addForeignKey('fk_ur_user', '{{%user_roles}}', 'user_id', '{{%users}}', 'id', 'CASCADE');
         $this->addForeignKey('fk_ur_role', '{{%user_roles}}', 'role_id', '{{%roles}}', 'id', 'CASCADE');
 
