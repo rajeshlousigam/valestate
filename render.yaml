@@ -47,6 +47,8 @@ services:
       # idempotent — creates schema + seeds roles/localities/staff on each boot
       - { key: RUN_MIGRATIONS, value: "1" }
       - { key: RUN_SEED, value: "1" }
+      # demo data (populates the dashboard/queue/lists) — set to "0" for real use
+      - { key: RUN_DEMO, value: "1" }
 
   # ---- REST API (owners/buyers/mobile + web app) ----
   - type: web

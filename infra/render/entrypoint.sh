@@ -26,5 +26,8 @@ fi
 if [ "${RUN_SEED:-0}" = "1" ]; then
     php /var/www/app/yii seed/launch-city --interactive=0 || echo "seed: skipped/failed"
 fi
+if [ "${RUN_DEMO:-0}" = "1" ]; then
+    php /var/www/app/yii demo/seed --interactive=0 || echo "demo: skipped/failed"
+fi
 
 exec apache2-foreground
