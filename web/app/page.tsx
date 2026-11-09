@@ -1,7 +1,8 @@
 import { ArrowRight, MapPin, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { PropertyCard } from "@/components/property/property-card";
-import { BannerCarousel } from "@/components/home/banner-carousel";
+import { HeroBanner } from "@/components/home/hero-banner";
+import { SkylineDivider } from "@/components/home/skyline-divider";
 import { SearchHero } from "@/components/property/search-hero";
 import { buttonVariants } from "@/components/ui/button";
 import { Cover } from "@/components/ui/cover";
@@ -35,36 +36,35 @@ export default async function Home() {
 
   return (
     <>
-      {/* ---------- HERO ---------- */}
-      <section className="relative pt-14 sm:pt-20">
+      {/* ---------- HERO: banner (≈½ screen), then headline + search ---------- */}
+      {banners.length > 0 && (
+        <HeroBanner slides={banners.map((b) => ({ id: b.id, title: b.title, body: b.body, image: assetUrl("banner", b.image) }))} />
+      )}
+      <SkylineDivider className={banners.length > 0 ? "pt-3" : "pt-8"} />
+      <section className="pt-4 sm:pt-5">
         <Container>
           <div className="mx-auto max-w-3xl text-center">
             <Eyebrow className="animate-fade-up">
               <Sparkles className="h-3.5 w-3.5" /> Verified real estate · Imphal, Manipur
             </Eyebrow>
-            <h1 className="animate-fade-up mt-5 text-balance text-4xl font-bold leading-[1.05] tracking-tight sm:text-6xl">
+            <h1 className="animate-fade-up mt-3 text-balance text-2xl font-bold leading-tight tracking-tight sm:text-4xl">
               Find a home you can <span className="brand-text">actually trust</span>.
             </h1>
-            <p className="animate-fade-up mx-auto mt-5 max-w-xl text-balance text-lg text-muted">
-              Every listing on Estara Properties is verified by our team before it goes public. No fakes, no
-              duplicates, no brokers.
+            <p className="animate-fade-up mx-auto mt-2 text-balance text-sm text-fg/70 sm:text-base">
+              Every listing verified before it goes public — no fakes, no duplicates, no brokers.
             </p>
           </div>
-
-          <div className="animate-fade-up mx-auto mt-10 max-w-4xl">
+          <div className="animate-fade-up mx-auto mt-5 max-w-4xl">
             <SearchHero masters={masters} />
           </div>
+        </Container>
+      </section>
 
-          {banners.length > 0 && (
-            <div className="mx-auto mt-10 max-w-6xl">
-              <BannerCarousel
-                slides={banners.map((b) => ({ id: b.id, title: b.title, body: b.body, image: assetUrl("banner", b.image) }))}
-              />
-            </div>
-          )}
-
-          {stats.length > 0 && (
-            <div className="mx-auto mt-10 flex max-w-4xl flex-wrap justify-center gap-3">
+      {/* ---------- TRUST STATS ---------- */}
+      {stats.length > 0 && (
+        <section className="pt-10 sm:pt-12">
+          <Container>
+            <div className="mx-auto flex max-w-4xl flex-wrap justify-center gap-3">
               {stats.map((s) => (
                 <GlassCard key={s.id} className="min-w-[160px] max-w-xs flex-1 p-5 text-center">
                   <p className="text-2xl font-bold brand-text sm:text-3xl">{s.header}</p>
@@ -72,9 +72,9 @@ export default async function Home() {
                 </GlassCard>
               ))}
             </div>
-          )}
-        </Container>
-      </section>
+          </Container>
+        </section>
+      )}
 
       <ListingSection
         eyebrow="Fresh"

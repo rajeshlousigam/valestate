@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { AuthProvider } from "@/components/auth/auth-provider";
 import { BlinkingSquares } from "@/components/effects/blinking-squares";
+import { EstateArt } from "@/components/effects/estate-art";
 import { Footer } from "@/components/layout/footer";
 import { Navbar } from "@/components/layout/navbar";
 import { ThemeProvider, noFlashScript } from "@/components/theme/theme-provider";
@@ -35,6 +36,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <ThemeProvider>
           <AuthProvider>
             <BlinkingSquares />
+            <EstateArt />
             <Navbar purposes={purposes} />
             <main>{children}</main>
             <Footer purposes={purposes} districts={districts} />
