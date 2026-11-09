@@ -3,24 +3,78 @@
 @tailwind utilities;
 
 /* ============================================================
-   Estara Properties — professional Manipur / Imphal palette
-   Loktak emerald + Kangla gold. Restrained, premium, glassy.
+   Two palettes × light/dark. Palette = <html data-palette>,
+   mode = <html class="dark">.
+   · Estara (default): logo gold on ivory / near-black.
+   · Classic: Loktak emerald + Kangla gold.
    ============================================================ */
 @layer base {
+  /* ---- Estara · light ---- */
   :root {
-    /* Light — clean cool neutral, deep slate ink; emerald primary, gold sparing */
+    --bg: 40 33% 97%;
+    --surface: 0 0% 100%;
+    --fg: 30 14% 10%;
+    --muted: 30 8% 36%;
+    --subtle: 30 6% 50%;
+    --line: 38 20% 85%;
+    --field: 36 16% 66%;
+
+    --brand: 40 74% 36%; /* antique gold */
+    --brand-2: 28 30% 14%; /* bronze-black — gradient partner */
+    --brand-soft: 43 60% 92%;
+    --accent: 44 80% 46%; /* logo gold */
+
+    --success: 152 60% 36%;
+    --warning: 24 90% 48%;
+
+    --glass-bg: 0 0% 100%;
+    --glass-a: 0.72;
+    --glass-border: 40 30% 100%;
+    --glass-border-a: 0.9;
+
+    color-scheme: light;
+  }
+
+  /* ---- Estara · dark ---- */
+  .dark {
+    --bg: 30 8% 5%;
+    --surface: 30 6% 9%;
+    --fg: 42 35% 93%;
+    --muted: 38 12% 68%;
+    --subtle: 36 8% 50%;
+    --line: 34 10% 18%;
+    --field: 36 12% 36%;
+
+    --brand: 43 72% 50%;
+    --brand-2: 34 70% 32%;
+    --brand-soft: 38 35% 14%;
+    --accent: 45 85% 58%;
+
+    --success: 152 50% 48%;
+    --warning: 30 90% 56%;
+
+    --glass-bg: 40 30% 90%;
+    --glass-a: 0.06;
+    --glass-border: 42 40% 96%;
+    --glass-border-a: 0.12;
+
+    color-scheme: dark;
+  }
+
+  /* ---- Classic · light ---- */
+  [data-palette="classic"] {
     --bg: 196 28% 97%;
     --surface: 0 0% 100%;
     --fg: 200 30% 13%;
     --muted: 200 14% 36%;
     --subtle: 200 12% 52%;
     --line: 200 18% 84%;
-    --field: 200 20% 68%; /* clearly visible input border */
+    --field: 200 20% 68%;
 
     --brand: 170 78% 30%; /* emerald */
-    --brand-2: 190 82% 36%; /* teal — gradient partner */
+    --brand-2: 190 82% 36%; /* teal */
     --brand-soft: 174 44% 91%;
-    --accent: 40 84% 45%; /* gold — verified accents only */
+    --accent: 40 84% 45%; /* gold */
 
     --success: 152 60% 40%;
     --warning: 32 90% 50%;
@@ -29,19 +83,17 @@
     --glass-a: 0.72;
     --glass-border: 200 24% 100%;
     --glass-border-a: 0.9;
-
-    color-scheme: light;
   }
 
-  .dark {
-    /* Dark — deep teal-charcoal, luminous emerald; gold as accent */
+  /* ---- Classic · dark ---- */
+  [data-palette="classic"].dark {
     --bg: 197 32% 7%;
     --surface: 198 24% 11%;
     --fg: 195 22% 96%;
     --muted: 196 13% 68%;
     --subtle: 196 11% 52%;
     --line: 198 20% 22%;
-    --field: 196 15% 40%; /* visible input border on dark */
+    --field: 196 15% 40%;
 
     --brand: 166 72% 47%;
     --brand-2: 188 78% 52%;
@@ -55,8 +107,6 @@
     --glass-a: 0.07;
     --glass-border: 197 40% 96%;
     --glass-border-a: 0.14;
-
-    color-scheme: dark;
   }
 
   * {

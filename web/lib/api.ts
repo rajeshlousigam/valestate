@@ -28,7 +28,10 @@ import type {
   WhyTrust,
 } from "./types";
 
-const BASE = (process.env.NEXT_PUBLIC_API_BASE_URL ?? "https://control.estaraimphal.com/api/web/v1").replace(/\/$/, "");
+const API_URL = (process.env.NEXT_PUBLIC_API_BASE_URL ?? "https://control.estaraimphal.com/api/web/v1").replace(/\/$/, "");
+// Browsers go through the same-origin rewrite in next.config.mjs (the API
+// rejects CORS preflight); server components call the API directly.
+const BASE = typeof window === "undefined" ? API_URL : "/estara-api";
 const ASSETS = (process.env.NEXT_PUBLIC_ASSET_BASE_URL ?? "https://control.estaraimphal.com/docs").replace(/\/$/, "");
 
 const TOKEN_KEY = "es_token";

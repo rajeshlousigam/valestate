@@ -1,6 +1,7 @@
-import { ArrowRight, Sparkles } from "lucide-react";
+import { ArrowRight, MapPin, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { PropertyCard } from "@/components/property/property-card";
+import { BannerCarousel } from "@/components/home/banner-carousel";
 import { SearchHero } from "@/components/property/search-hero";
 import { buttonVariants } from "@/components/ui/button";
 import { Cover } from "@/components/ui/cover";
@@ -9,6 +10,7 @@ import { Container, Eyebrow, SectionHeading } from "@/components/ui/primitives";
 import { SpecularCTA } from "@/components/ui/specular-cta";
 import { VerifiedBadge } from "@/components/ui/verified-badge";
 import { api, assetUrl, fetchMasters } from "@/lib/api";
+import { present } from "@/lib/format";
 import type { ListingSummary } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -28,6 +30,7 @@ export default async function Home() {
     safe(api.whyTrust()),
   ]);
   const how = howVerify[0];
+  const districts = masters.districts.filter((d) => present(d.name));
   const why = whyTrust[0];
 
   return (
@@ -52,10 +55,18 @@ export default async function Home() {
             <SearchHero masters={masters} />
           </div>
 
+          {banners.length > 0 && (
+            <div className="mx-auto mt-10 max-w-6xl">
+              <BannerCarousel
+                slides={banners.map((b) => ({ id: b.id, title: b.title, body: b.body, image: assetUrl("banner", b.image) }))}
+              />
+            </div>
+          )}
+
           {stats.length > 0 && (
             <div className="mx-auto mt-10 flex max-w-4xl flex-wrap justify-center gap-3">
               {stats.map((s) => (
-                <GlassCard key={s.id} className="min-w-[160px] flex-1 p-5 text-center">
+                <GlassCard key={s.id} className="min-w-[160px] max-w-xs flex-1 p-5 text-center">
                   <p className="text-2xl font-bold brand-text sm:text-3xl">{s.header}</p>
                   <p className="mt-1 text-xs text-muted">{s.body}</p>
                 </GlassCard>
@@ -64,31 +75,6 @@ export default async function Home() {
           )}
         </Container>
       </section>
-
-      {/* ---------- BANNERS ---------- */}
-      {banners.length > 0 && (
-        <section className="pt-16">
-          <Container>
-            <div className="no-scrollbar flex snap-x gap-5 overflow-x-auto pb-2">
-              {banners.map((b) => (
-                <Cover
-                  key={b.id}
-                  index={b.id}
-                  src={assetUrl("banner", b.image)}
-                  alt={b.title}
-                  className="aspect-[21/9] w-[85%] shrink-0 snap-start sm:w-[60%]"
-                  rounded="rounded-4xl"
-                >
-                  <div className="absolute inset-x-0 bottom-0 p-6">
-                    <h3 className="text-xl font-bold text-white">{b.title}</h3>
-                    <p className="text-sm text-white/85">{b.body}</p>
-                  </div>
-                </Cover>
-              ))}
-            </div>
-          </Container>
-        </section>
-      )}
 
       <ListingSection
         eyebrow="Fresh"
@@ -136,6 +122,26 @@ export default async function Home() {
                       <h3 className="text-xl font-bold text-white">{t.type_name}</h3>
                     </div>
                   </Cover>
+                </Link>
+              ))}
+            </div>
+          </Container>
+        </section>
+      )}
+
+      {/* ---------- BROWSE BY DISTRICT ---------- */}
+      {districts.length > 0 && (
+        <section className="pt-24">
+          <Container>
+            <SectionHeading eyebrow="Neighbourhoods" title="Browse by district" subtitle="Jump straight to verified properties in your area." />
+            <div className="mt-8 flex flex-wrap gap-3">
+              {districts.map((d) => (
+                <Link
+                  key={d.id}
+                  href={`/search?state=${d.state_id}&district=${d.id}`}
+                  className="glass inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium transition-all hover:-translate-y-0.5 hover:text-brand"
+                >
+                  <MapPin className="h-4 w-4 text-brand" /> {d.name}
                 </Link>
               ))}
             </div>

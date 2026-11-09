@@ -5,6 +5,7 @@ import { BlinkingSquares } from "@/components/effects/blinking-squares";
 import { Footer } from "@/components/layout/footer";
 import { Navbar } from "@/components/layout/navbar";
 import { ThemeProvider, noFlashScript } from "@/components/theme/theme-provider";
+import { fetchBrowseLinks } from "@/lib/nav";
 
 export const metadata: Metadata = {
   title: {
@@ -23,7 +24,8 @@ export const metadata: Metadata = {
   robots: { index: true, follow: true },
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const { purposes, districts } = await fetchBrowseLinks();
   return (
     <html lang="en-IN" suppressHydrationWarning>
       <head>
@@ -33,9 +35,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ThemeProvider>
           <AuthProvider>
             <BlinkingSquares />
-            <Navbar />
+            <Navbar purposes={purposes} />
             <main>{children}</main>
-            <Footer />
+            <Footer purposes={purposes} districts={districts} />
           </AuthProvider>
         </ThemeProvider>
       </body>

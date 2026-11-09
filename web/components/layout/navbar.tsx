@@ -7,19 +7,16 @@ import { useState } from "react";
 import { useAuth } from "@/components/auth/auth-provider";
 import { Container } from "@/components/ui/primitives";
 import { SpecularCTA } from "@/components/ui/specular-cta";
+import { PalettePicker } from "@/components/theme/palette-picker";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
+import type { NavLink } from "@/lib/nav";
 import { cn } from "@/lib/utils";
 import { Logo } from "./logo";
 
-const NAV = [
-  { href: "/search?intent=SALE", label: "Buy" },
-  { href: "/search?intent=RENT", label: "Rent" },
-  { href: "/search?type=COMMERCIAL", label: "Commercial" },
-  { href: "/search?type=LAND", label: "Land" },
-  { href: "/#how-it-works", label: "How it works" },
-];
+const STATIC_NAV: NavLink[] = [{ href: "/#how-it-works", label: "How it works" }];
 
-export function Navbar() {
+export function Navbar({ purposes }: { purposes: NavLink[] }) {
+  const NAV = [...purposes, ...STATIC_NAV];
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
   const { user, logout } = useAuth();
@@ -75,6 +72,7 @@ export function Navbar() {
                 List property
               </SpecularCTA>
             </div>
+            <PalettePicker />
             <ThemeToggle />
             <button
               type="button"

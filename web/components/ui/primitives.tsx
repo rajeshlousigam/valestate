@@ -8,7 +8,7 @@ export function Eyebrow({ className, ...props }: React.HTMLAttributes<HTMLSpanEl
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-2 rounded-full border border-line px-3 py-1 text-xs font-semibold uppercase tracking-wider text-brand",
+        "inline-flex w-fit items-center gap-2 rounded-full border border-line px-3 py-1 text-xs font-semibold uppercase tracking-wider text-brand",
         className,
       )}
       {...props}

@@ -1,37 +1,20 @@
 import Link from "next/link";
 import { Container } from "@/components/ui/primitives";
+import type { NavLink } from "@/lib/nav";
 import { Logo } from "./logo";
 
-const COLS = [
-  {
-    title: "Explore",
-    links: [
-      { label: "Buy in Imphal", href: "/search?intent=SALE" },
-      { label: "Rent in Imphal", href: "/search?intent=RENT" },
-      { label: "Commercial", href: "/search?type=COMMERCIAL" },
-      { label: "Land & Plots", href: "/search?type=LAND" },
-    ],
-  },
-  {
-    title: "Company",
-    links: [
-      { label: "How verification works", href: "/#how-it-works" },
-      { label: "Why Estara Properties", href: "/#why" },
-      { label: "List your property", href: "/list-property" },
-    ],
-  },
-  {
-    title: "Localities",
-    links: [
-      { label: "Thangmeiband", href: "/search?locality=thangmeiband" },
-      { label: "Uripok", href: "/search?locality=uripok" },
-      { label: "Lamphel", href: "/search?locality=lamphel" },
-      { label: "Khurai", href: "/search?locality=khurai" },
-    ],
-  },
+const COMPANY: NavLink[] = [
+  { label: "How verification works", href: "/#how-it-works" },
+  { label: "Why Estara Properties", href: "/#why" },
+  { label: "List your property", href: "/list-property" },
 ];
 
-export function Footer() {
+export function Footer({ purposes, districts }: { purposes: NavLink[]; districts: NavLink[] }) {
+  const cols = [
+    { title: "Explore", links: [{ label: "All properties", href: "/search" }, ...purposes] },
+    { title: "Company", links: COMPANY },
+    { title: "Districts", links: districts.slice(0, 6) },
+  ].filter((c) => c.links.length);
   return (
     <footer className="mt-24">
       <Container>
@@ -47,7 +30,7 @@ export function Footer() {
                 If it&apos;s on Estara Properties, it&apos;s real.
               </p>
             </div>
-            {COLS.map((col) => (
+            {cols.map((col) => (
               <div key={col.title}>
                 <h3 className="text-sm font-semibold text-fg">{col.title}</h3>
                 <ul className="mt-4 space-y-2.5">
@@ -64,11 +47,7 @@ export function Footer() {
           </div>
           <div className="mt-10 flex flex-col items-center justify-between gap-3 border-t border-line pt-6 text-xs text-subtle sm:flex-row">
             <p>© {new Date().getFullYear()} Estara Properties · Imphal, Manipur</p>
-            <p className="flex gap-4">
-              <Link href="#" className="hover:text-fg">Privacy</Link>
-              <Link href="#" className="hover:text-fg">Terms</Link>
-              <Link href="#" className="hover:text-fg">Grievance</Link>
-            </p>
+            <p>Every listing verified before it goes public.</p>
           </div>
         </div>
       </Container>

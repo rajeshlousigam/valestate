@@ -5,13 +5,18 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Select } from "@/components/ui/field";
 import { SpecularCTA } from "@/components/ui/specular-cta";
+import { isBookingMode } from "@/lib/api";
 import { present } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type { Masters } from "./filter-panel";
 
 export function SearchHero({ masters }: { masters: Masters }) {
   const router = useRouter();
-  const [type, setType] = useState<number | null>(masters.realEstateTypes[0]?.id ?? null);
+  // Buy/rent (Enquiry) first — site-visit booking is the secondary journey.
+  const types = [...masters.realEstateTypes].sort(
+    (a, b) => Number(isBookingMode(a.request_mode)) - Number(isBookingMode(b.request_mode)),
+  );
+  const [type, setType] = useState<number | null>(types[0]?.id ?? null);
   const [district, setDistrict] = useState("");
   const [ptype, setPtype] = useState("");
   const [budget, setBudget] = useState("");
@@ -36,9 +41,9 @@ export function SearchHero({ masters }: { masters: Masters }) {
 
   return (
     <div className="glass-panel rounded-4xl p-2.5 sm:rounded-5xl">
-      {masters.realEstateTypes.length > 0 && (
+      {types.length > 0 && (
         <div className="mb-2.5 flex gap-1 rounded-full bg-fg/[0.04] p-1" role="tablist">
-          {masters.realEstateTypes.map((t) => (
+          {types.map((t) => (
             <button
               key={t.id}
               type="button"
@@ -50,7 +55,7 @@ export function SearchHero({ masters }: { masters: Masters }) {
                 setBudget("");
               }}
               className={cn(
-                "flex-1 rounded-full px-4 py-2 text-sm font-semibold transition-all",
+                "flex-1 rounded-full px-3 py-2 text-xs font-semibold leading-tight transition-all sm:px-4 sm:text-sm",
                 type === t.id ? "brand-gradient text-white shadow-glow" : "text-fg/70 hover:text-fg",
               )}
             >

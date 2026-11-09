@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { cache } from "react";
 import { Gallery } from "@/components/property/gallery";
 import { PropertyActions } from "@/components/property/property-actions";
+import { ShareButton } from "@/components/property/share-button";
 import { TrustPanel } from "@/components/property/trust-panel";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Container } from "@/components/ui/primitives";
@@ -53,9 +54,12 @@ export default async function PropertyPage({ params }: { params: Promise<{ slug:
 
   return (
     <Container className="pt-8">
-      <Link href="/search" className="inline-flex items-center gap-1.5 text-sm text-muted transition-colors hover:text-brand">
-        <ArrowLeft className="h-4 w-4" /> Back to search
-      </Link>
+      <div className="flex items-center justify-between gap-3">
+        <Link href="/search" className="inline-flex items-center gap-1.5 text-sm text-muted transition-colors hover:text-brand">
+          <ArrowLeft className="h-4 w-4" /> Back to search
+        </Link>
+        <ShareButton title={p.title_property} />
+      </div>
 
       <div className="mt-5 grid gap-8 lg:grid-cols-[1.6fr_1fr]">
         <div>
@@ -110,7 +114,7 @@ export default async function PropertyPage({ params }: { params: Promise<{ slug:
         </div>
 
         <div className="space-y-5 lg:sticky lg:top-24 lg:self-start">
-          <GlassCard panel className="p-6">
+          <GlassCard panel className="scroll-mt-24 p-6" id="actions">
             <p className="text-sm text-muted">{booking ? "Site visit" : "Price"}</p>
             <p className="text-3xl font-bold tracking-tight">{price ?? "On request"}</p>
             {deposit && <p className="mt-1 text-sm text-muted">Deposit {deposit}</p>}
@@ -120,6 +124,18 @@ export default async function PropertyPage({ params }: { params: Promise<{ slug:
           <TrustPanel listedOn={p.date_listed} howVerify={howVerify} />
         </div>
       </div>
+
+      {/* Phones: the action panel sits below the fold, so keep the CTA in reach. */}
+      <div className="glass-nav fixed inset-x-0 bottom-0 z-40 flex items-center gap-3 px-4 py-3 lg:hidden">
+        <div className="min-w-0 flex-1">
+          <p className="text-xs text-muted">{p.real_estate_type}</p>
+          <p className="truncate font-bold">{price ?? "Price on request"}</p>
+        </div>
+        <a href="#actions" className="rounded-full brand-gradient px-5 py-3 text-sm font-semibold text-white shadow-glow">
+          {booking ? "Book visit" : "Enquire"}
+        </a>
+      </div>
+      <div className="h-20 lg:hidden" aria-hidden />
     </Container>
   );
 }

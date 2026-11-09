@@ -96,7 +96,15 @@ const SpecularButton = ({
     if (!btn || !fx) return;
 
     const dpr = window.devicePixelRatio || 1;
-    const renderer = new Renderer({ alpha: true, premultipliedAlpha: true, antialias: true, dpr });
+    // No WebGL (GPU off, old device, headless): ogl's constructor throws. Skip the
+    // shine effect and keep the plain CSS button instead of crashing the page.
+    let renderer;
+    try {
+      renderer = new Renderer({ alpha: true, premultipliedAlpha: true, antialias: true, dpr });
+    } catch {
+      return;
+    }
+    if (!renderer.gl) return;
     const gl = renderer.gl;
     gl.clearColor(0, 0, 0, 0);
     gl.enable(gl.BLEND);

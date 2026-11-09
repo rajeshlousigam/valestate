@@ -16,6 +16,7 @@ export function Cover({
   children,
   rounded = "rounded-3xl",
   overlay = true,
+  eager = false,
 }: {
   index: number;
   src?: string;
@@ -24,6 +25,8 @@ export function Cover({
   children?: React.ReactNode;
   rounded?: string;
   overlay?: boolean;
+  /** Load immediately (above-the-fold images). */
+  eager?: boolean;
 }) {
   const [failed, setFailed] = useState<string | null>(null);
 
@@ -39,7 +42,7 @@ export function Cover({
         <img
           src={src}
           alt={alt}
-          loading="lazy"
+          loading={eager ? "eager" : "lazy"}
           decoding="async"
           onError={() => setFailed(src)}
           className="absolute inset-0 h-full w-full object-cover"

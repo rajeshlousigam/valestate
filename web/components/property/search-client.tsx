@@ -1,8 +1,8 @@
 "use client";
 
 import { Search, SlidersHorizontal, X } from "lucide-react";
-import { useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 import { buttonVariants } from "@/components/ui/button";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Container } from "@/components/ui/primitives";
@@ -23,6 +23,8 @@ type Result = { items: ListingSummary[]; pagination: Pagination | null; error: s
  */
 export function SearchClient({ masters }: { masters: Masters }) {
   const params = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
   const [filters, setFilters] = useState<Filters>(() => ({
     real_estate_type_id: num(params.get("type")),
     property_type_id: num(params.get("ptype")),
@@ -43,6 +45,43 @@ export function SearchClient({ masters }: { masters: Masters }) {
     const t = setTimeout(() => setDebouncedQ(q), 350);
     return () => clearTimeout(t);
   }, [q]);
+
+  // Keep the URL in sync so results are shareable and Back restores them.
+  const written = useRef<string | null>(null);
+  const urlNow = params.toString();
+
+  // URL changed by something other than us (navbar link, Back): adopt it.
+  useEffect(() => {
+    if (written.current === null || urlNow === written.current) return;
+    written.current = urlNow;
+    setPage(1);
+    setFilters({
+      real_estate_type_id: num(params.get("type")),
+      property_type_id: num(params.get("ptype")),
+      budget_id: num(params.get("budget")),
+      state_id: num(params.get("state")),
+      district_id: num(params.get("district")),
+    });
+    const nextQ = params.get("q") ?? "";
+    setQ(nextQ);
+    setDebouncedQ(nextQ);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- keyed on the URL string only
+  }, [urlNow]);
+
+  useEffect(() => {
+    const p = new URLSearchParams();
+    const put = (k: string, v?: number) => v && p.set(k, String(v));
+    put("type", filters.real_estate_type_id);
+    put("ptype", filters.property_type_id);
+    put("budget", filters.budget_id);
+    put("state", filters.state_id);
+    put("district", filters.district_id);
+    if (!hasFilters(filters) && debouncedQ.trim()) p.set("q", debouncedQ.trim());
+    const qs = p.toString();
+    if (qs === written.current) return;
+    written.current = qs;
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+  }, [filters, debouncedQ, pathname, router]);
 
   useEffect(() => {
     let cancelled = false;
@@ -75,6 +114,7 @@ export function SearchClient({ masters }: { masters: Masters }) {
     setFilters({});
   };
   const total = res.pagination?.total ?? res.items.length;
+  const active = activeFilters(filters, masters);
 
   return (
     <Container className="pt-8">
@@ -109,13 +149,42 @@ export function SearchClient({ masters }: { masters: Masters }) {
         </aside>
 
         <div>
-          <div className="mb-5 flex items-center justify-between">
+          <div className="mb-5 space-y-3">
             <h1 className="text-lg font-semibold" aria-live="polite">
               {res.loading && page === 1 ? "Searching…" : `${total} verified ${total === 1 ? "property" : "properties"}`}
             </h1>
+            {active.length > 0 && (
+              <div className="flex flex-wrap items-center gap-2">
+                {active.map((a) => (
+                  <button
+                    key={a.label}
+                    onClick={() => set(a.clear)}
+                    aria-label={`Remove filter ${a.label}`}
+                    className="inline-flex items-center gap-1.5 rounded-full bg-brand-soft/70 px-3 py-1.5 text-sm font-medium text-fg hover:bg-brand-soft"
+                  >
+                    {a.label} <X className="h-3.5 w-3.5" />
+                  </button>
+                ))}
+                <button onClick={clear} className="px-2 text-sm font-semibold text-brand hover:underline">
+                  Clear all
+                </button>
+              </div>
+            )}
           </div>
 
-          {res.error && res.items.length === 0 ? (
+          {res.loading && res.items.length === 0 ? (
+            <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3" aria-hidden>
+              {[0, 1, 2, 3, 4, 5].map((i) => (
+                <div key={i} className="glass overflow-hidden rounded-4xl">
+                  <div className="aspect-[16/11] animate-pulse bg-fg/[0.07]" />
+                  <div className="space-y-2.5 p-5">
+                    <div className="h-4 w-3/4 animate-pulse rounded-full bg-fg/[0.07]" />
+                    <div className="h-3 w-1/2 animate-pulse rounded-full bg-fg/[0.07]" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : res.error && res.items.length === 0 ? (
             <GlassCard className="grid place-items-center p-16 text-center">
               <p className="text-lg font-semibold">Couldn&apos;t load results</p>
               <p className="mt-1 max-w-sm text-sm text-muted">{res.error}</p>
@@ -179,4 +248,24 @@ export function SearchClient({ masters }: { masters: Masters }) {
       )}
     </Container>
   );
+}
+
+type ActiveFilter = { label: string; clear: Partial<Filters> };
+
+/** Human labels for the applied filters, each with the patch that removes it. */
+function activeFilters(f: Filters, m: Masters): ActiveFilter[] {
+  const out: ActiveFilter[] = [];
+  const add = (label: string | undefined, clear: Partial<Filters>) => {
+    if (label) out.push({ label, clear });
+  };
+  add(m.realEstateTypes.find((t) => t.id === f.real_estate_type_id)?.type_name, {
+    real_estate_type_id: undefined,
+    property_type_id: undefined,
+    budget_id: undefined,
+  });
+  add(m.propertyTypes.find((t) => t.id === f.property_type_id)?.type_name, { property_type_id: undefined });
+  add(m.budgets.find((b) => b.id === f.budget_id)?.budget_amount, { budget_id: undefined });
+  add(m.states.find((st) => st.id === f.state_id)?.name, { state_id: undefined, district_id: undefined });
+  add(m.districts.find((d) => d.id === f.district_id)?.name, { district_id: undefined });
+  return out;
 }
