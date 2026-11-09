@@ -159,7 +159,7 @@ export default async function Home() {
             <div className="mt-12 grid gap-6 md:grid-cols-3">
               {why.types.map((w) => (
                 <GlassCard key={w.id} panel className="p-7">
-                  <Icon src={assetUrl("landing", w.icon)} soft />
+                  <Icon src={assetUrl("landing", w.icon)} />
                   <h3 className="mt-4 text-lg font-semibold">{w.title}</h3>
                   <p className="mt-2 text-sm text-muted">{w.short_description}</p>
                 </GlassCard>
@@ -230,12 +230,12 @@ function ListingSection({
   );
 }
 
-function Icon({ src, soft = false }: { src?: string; soft?: boolean }) {
+function Icon({ src }: { src?: string }) {
   return (
     <span
       className={cn(
-        "grid h-12 w-12 place-items-center overflow-hidden rounded-2xl",
-        soft ? "bg-brand-soft" : "brand-gradient shadow-glow",
+        // Off-white tile so the full-colour icon artwork reads cleanly in every theme.
+        "grid h-12 w-12 place-items-center overflow-hidden rounded-2xl bg-gradient-to-br from-white via-stone-50 to-stone-200 shadow-sm ring-1 ring-black/5",
       )}
     >
       {src && (

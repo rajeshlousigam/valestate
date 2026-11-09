@@ -176,7 +176,7 @@ export function SearchClient({ masters }: { masters: Masters }) {
             <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3" aria-hidden>
               {[0, 1, 2, 3, 4, 5].map((i) => (
                 <div key={i} className="glass overflow-hidden rounded-4xl">
-                  <div className="aspect-[16/11] animate-pulse bg-fg/[0.07]" />
+                  <div className="aspect-square animate-pulse bg-fg/[0.07]" />
                   <div className="space-y-2.5 p-5">
                     <div className="h-4 w-3/4 animate-pulse rounded-full bg-fg/[0.07]" />
                     <div className="h-3 w-1/2 animate-pulse rounded-full bg-fg/[0.07]" />
