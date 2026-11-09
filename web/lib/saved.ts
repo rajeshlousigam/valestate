@@ -3,9 +3,9 @@
 import { useCallback, useEffect, useState } from "react";
 
 /** Client-side "interested / saved" list (localStorage) — no backend needed. */
-export type SavedItem = { slug: string; title: string; cover: number; price: number; intent: string; locality: string };
+export type SavedItem = { slug: string; title: string; thumbnail?: string; subtitle: string; locality: string };
 
-const KEY = "ve_saved";
+const KEY = "es_saved";
 
 function read(): SavedItem[] {
   if (typeof window === "undefined") return [];

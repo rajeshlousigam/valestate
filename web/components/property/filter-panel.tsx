@@ -2,169 +2,111 @@
 
 import { RotateCcw } from "lucide-react";
 import { Chip } from "@/components/ui/chip";
-import { CheckboxRow } from "@/components/ui/checkbox";
-import { RangeSlider } from "@/components/ui/range-slider";
-import { formatINR } from "@/lib/format";
-import { AMENITIES, LOCALITIES } from "@/lib/mock-data";
-import type { Furnishing, Intent, PropertyType } from "@/lib/types";
+import { present } from "@/lib/format";
+import type { Budget, District, PropertyTypeOption, RealEstateType, SearchFilters, State } from "@/lib/types";
 
-export interface Filters {
-  intent: "" | Intent;
-  types: PropertyType[];
-  localities: string[];
-  price: [number, number];
-  bedrooms: number;
-  bathrooms: number;
-  furnishing: Furnishing[];
-  amenities: string[];
-  q: string;
-  sort: "relevance" | "newest" | "price-asc" | "price-desc";
-}
+export type Filters = Omit<SearchFilters, "search">;
 
-export function defaultFilters(bounds: [number, number]): Filters {
-  return {
-    intent: "",
-    types: [],
-    localities: [],
-    price: bounds,
-    bedrooms: 0,
-    bathrooms: 0,
-    furnishing: [],
-    amenities: [],
-    q: "",
-    sort: "relevance",
-  };
-}
-
-function toggle<T>(arr: T[], v: T): T[] {
-  return arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v];
+export interface Masters {
+  realEstateTypes: RealEstateType[];
+  propertyTypes: PropertyTypeOption[];
+  budgets: Budget[];
+  states: State[];
+  districts: District[];
 }
 
 function Group({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="border-t border-line py-5 first:border-t-0 first:pt-0">
       <h3 className="mb-3 text-sm font-semibold text-fg">{title}</h3>
-      {children}
+      <div className="flex flex-wrap gap-2">{children}</div>
     </div>
   );
 }
 
-const FURNISHING: { v: Furnishing; l: string }[] = [
-  { v: "UNFURNISHED", l: "Unfurnished" },
-  { v: "SEMI", l: "Semi-furnished" },
-  { v: "FURNISHED", l: "Furnished" },
-];
-
+/** Dependent filters per API doc §8: property type + budget depend on the
+ *  real-estate type; district depends on state. */
 export function FilterPanel({
   filters,
   set,
-  bounds,
+  masters,
   onClear,
 }: {
   filters: Filters;
   set: (patch: Partial<Filters>) => void;
-  bounds: [number, number];
+  masters: Masters;
   onClear: () => void;
 }) {
+  const re = filters.real_estate_type_id;
+  const pTypes = masters.propertyTypes.filter((t) => t.real_estate_type_id === re && present(t.type_name));
+  const budgets = masters.budgets.filter((b) => b.real_estate_type_id === re && present(b.budget_amount));
+  const districts = masters.districts.filter((d) => d.state_id === filters.state_id && present(d.name));
+
   return (
     <div className="space-y-1">
       <div className="flex items-center justify-between pb-1">
         <h2 className="text-lg font-bold">Filters</h2>
-        <button
-          onClick={onClear}
-          className="inline-flex items-center gap-1.5 text-sm text-muted transition-colors hover:text-brand"
-        >
+        <button onClick={onClear} className="inline-flex items-center gap-1.5 text-sm text-muted transition-colors hover:text-brand">
           <RotateCcw className="h-3.5 w-3.5" /> Reset
         </button>
       </div>
 
       <Group title="Looking to">
-        <div className="flex flex-wrap gap-2">
-          <Chip active={filters.intent === ""} onClick={() => set({ intent: "" })}>Any</Chip>
-          <Chip active={filters.intent === "SALE"} onClick={() => set({ intent: "SALE" })}>Buy</Chip>
-          <Chip active={filters.intent === "RENT"} onClick={() => set({ intent: "RENT" })}>Rent</Chip>
-        </div>
+        <Chip active={!re} onClick={() => set({ real_estate_type_id: undefined, property_type_id: undefined, budget_id: undefined })}>
+          Any
+        </Chip>
+        {masters.realEstateTypes.map((t) => (
+          <Chip
+            key={t.id}
+            active={re === t.id}
+            onClick={() => set({ real_estate_type_id: t.id, property_type_id: undefined, budget_id: undefined })}
+          >
+            {t.type_name}
+          </Chip>
+        ))}
       </Group>
 
-      <Group title="Property type">
-        <div className="flex flex-wrap gap-2">
-          {(["RESIDENTIAL", "COMMERCIAL", "LAND"] as PropertyType[]).map((t) => (
-            <Chip key={t} active={filters.types.includes(t)} onClick={() => set({ types: toggle(filters.types, t) })}>
-              {t[0] + t.slice(1).toLowerCase()}
+      {re && pTypes.length > 0 && (
+        <Group title="Property type">
+          <Chip active={!filters.property_type_id} onClick={() => set({ property_type_id: undefined })}>Any</Chip>
+          {pTypes.map((t) => (
+            <Chip key={t.id} active={filters.property_type_id === t.id} onClick={() => set({ property_type_id: t.id })}>
+              {t.type_name}
             </Chip>
           ))}
-        </div>
-      </Group>
+        </Group>
+      )}
 
-      <Group title="Budget">
-        <RangeSlider
-          min={bounds[0]}
-          max={bounds[1]}
-          step={filters.intent === "RENT" ? 1000 : 100000}
-          value={filters.price}
-          onChange={(v) => set({ price: v })}
-          format={formatINR}
-        />
-      </Group>
-
-      <Group title="Bedrooms">
-        <div className="flex flex-wrap gap-2">
-          {[0, 1, 2, 3, 4].map((n) => (
-            <Chip key={n} active={filters.bedrooms === n} onClick={() => set({ bedrooms: n })}>
-              {n === 0 ? "Any" : `${n}+`}
+      {re && budgets.length > 0 && (
+        <Group title="Budget">
+          <Chip active={!filters.budget_id} onClick={() => set({ budget_id: undefined })}>Any</Chip>
+          {budgets.map((b) => (
+            <Chip key={b.id} active={filters.budget_id === b.id} onClick={() => set({ budget_id: b.id })}>
+              {b.budget_amount}
             </Chip>
           ))}
-        </div>
+        </Group>
+      )}
+
+      <Group title="State">
+        <Chip active={!filters.state_id} onClick={() => set({ state_id: undefined, district_id: undefined })}>Any</Chip>
+        {masters.states.map((s) => (
+          <Chip key={s.id} active={filters.state_id === s.id} onClick={() => set({ state_id: s.id, district_id: undefined })}>
+            {s.name}
+          </Chip>
+        ))}
       </Group>
 
-      <Group title="Bathrooms">
-        <div className="flex flex-wrap gap-2">
-          {[0, 1, 2, 3].map((n) => (
-            <Chip key={n} active={filters.bathrooms === n} onClick={() => set({ bathrooms: n })}>
-              {n === 0 ? "Any" : `${n}+`}
+      {filters.state_id && districts.length > 0 && (
+        <Group title="District">
+          <Chip active={!filters.district_id} onClick={() => set({ district_id: undefined })}>Any</Chip>
+          {districts.map((d) => (
+            <Chip key={d.id} active={filters.district_id === d.id} onClick={() => set({ district_id: d.id })}>
+              {d.name}
             </Chip>
           ))}
-        </div>
-      </Group>
-
-      <Group title="Furnishing">
-        <div className="space-y-0.5">
-          {FURNISHING.map((f) => (
-            <CheckboxRow
-              key={f.v}
-              label={f.l}
-              checked={filters.furnishing.includes(f.v)}
-              onToggle={() => set({ furnishing: toggle(filters.furnishing, f.v) })}
-            />
-          ))}
-        </div>
-      </Group>
-
-      <Group title="Locality">
-        <div className="max-h-56 space-y-0.5 overflow-auto pr-1">
-          {LOCALITIES.map((l) => (
-            <CheckboxRow
-              key={l.slug}
-              label={`${l.name}`}
-              checked={filters.localities.includes(l.slug)}
-              onToggle={() => set({ localities: toggle(filters.localities, l.slug) })}
-            />
-          ))}
-        </div>
-      </Group>
-
-      <Group title="Amenities">
-        <div className="space-y-0.5">
-          {AMENITIES.map((a) => (
-            <CheckboxRow
-              key={a}
-              label={a}
-              checked={filters.amenities.includes(a)}
-              onToggle={() => set({ amenities: toggle(filters.amenities, a) })}
-            />
-          ))}
-        </div>
-      </Group>
+        </Group>
+      )}
     </div>
   );
 }

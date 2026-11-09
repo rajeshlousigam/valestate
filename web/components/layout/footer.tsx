@@ -16,7 +16,7 @@ const COLS = [
     title: "Company",
     links: [
       { label: "How verification works", href: "/#how-it-works" },
-      { label: "Why ValEstate", href: "/#why" },
+      { label: "Why Estara Properties", href: "/#why" },
       { label: "List your property", href: "/list-property" },
     ],
   },
@@ -44,7 +44,7 @@ export function Footer() {
                 checked by our team before it goes public.
               </p>
               <p className="mt-4 text-sm font-semibold brand-text">
-                If it&apos;s on ValEstate, it&apos;s real.
+                If it&apos;s on Estara Properties, it&apos;s real.
               </p>
             </div>
             {COLS.map((col) => (
@@ -63,7 +63,7 @@ export function Footer() {
             ))}
           </div>
           <div className="mt-10 flex flex-col items-center justify-between gap-3 border-t border-line pt-6 text-xs text-subtle sm:flex-row">
-            <p>© {new Date().getFullYear()} ValEstate · Imphal, Manipur</p>
+            <p>© {new Date().getFullYear()} Estara Properties · Imphal, Manipur</p>
             <p className="flex gap-4">
               <Link href="#" className="hover:text-fg">Privacy</Link>
               <Link href="#" className="hover:text-fg">Terms</Link>

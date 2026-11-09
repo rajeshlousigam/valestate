@@ -8,15 +8,15 @@ import { ThemeProvider, noFlashScript } from "@/components/theme/theme-provider"
 
 export const metadata: Metadata = {
   title: {
-    default: "ValEstate — Verified properties in Imphal",
-    template: "%s | ValEstate",
+    default: "Estara Properties — Verified properties in Imphal",
+    template: "%s | Estara Properties",
   },
   description:
-    "Every property on ValEstate is verified by our operations team before it goes public. No fakes, no duplicates, no brokers — in Imphal, Manipur.",
+    "Every property on Estara Properties is verified by our operations team before it goes public. No fakes, no duplicates, no brokers — in Imphal, Manipur.",
   metadataBase: new URL("http://localhost:3000"),
   openGraph: {
-    title: "ValEstate — Verified properties in Imphal",
-    description: "If it's on ValEstate, it's real.",
+    title: "Estara Properties — Verified properties in Imphal",
+    description: "If it's on Estara Properties, it's real.",
     type: "website",
     locale: "en_IN",
   },

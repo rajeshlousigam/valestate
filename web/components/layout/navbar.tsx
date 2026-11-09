@@ -24,7 +24,7 @@ export function Navbar() {
   const pathname = usePathname();
   const { user, logout } = useAuth();
   const router = useRouter();
-  const firstName = user?.name?.split(" ")[0] ?? "Account";
+  const firstName = user?.name?.split(" ")[0] || "Account";
 
   async function doLogout() {
     await logout();

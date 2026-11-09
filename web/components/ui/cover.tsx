@@ -2,18 +2,16 @@
 
 import { useState } from "react";
 import { cover as coverGradient } from "@/lib/covers";
-import { photo as photoUrl } from "@/lib/photos";
 import { cn } from "@/lib/utils";
 
 /**
- * Listing image with graceful fallback: shows a royalty-free photo, and if it
- * fails to load (offline / 404) the on-brand gradient shows through instead.
+ * Listing image with graceful fallback: if `src` is missing or fails to load,
+ * the on-brand gradient (picked by `index`) shows through instead.
  */
 export function Cover({
   index,
   src,
   alt = "",
-  width = 800,
   className,
   children,
   rounded = "rounded-3xl",
@@ -22,30 +20,28 @@ export function Cover({
   index: number;
   src?: string;
   alt?: string;
-  width?: number;
   className?: string;
   children?: React.ReactNode;
   rounded?: string;
   overlay?: boolean;
 }) {
-  const [ok, setOk] = useState(true);
-  const url = src ?? photoUrl(index, width);
+  const [failed, setFailed] = useState<string | null>(null);
 
   return (
     <div
       className={cn("relative overflow-hidden bg-cover bg-center", rounded, className)}
-      style={{ backgroundImage: coverGradient(index) }}
+      style={{ backgroundImage: coverGradient(Math.abs(index)) }}
       role={alt ? "img" : undefined}
       aria-label={alt || undefined}
     >
-      {ok && (
+      {src && failed !== src && (
         // eslint-disable-next-line @next/next/no-img-element
         <img
-          src={url}
+          src={src}
           alt={alt}
           loading="lazy"
           decoding="async"
-          onError={() => setOk(false)}
+          onError={() => setFailed(src)}
           className="absolute inset-0 h-full w-full object-cover"
         />
       )}

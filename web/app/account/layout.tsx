@@ -1,6 +1,6 @@
 "use client";
 
-import { Heart, Home, Inbox, MessageSquare } from "lucide-react";
+import { Heart, Home, MessageSquare, UserRound } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
@@ -10,7 +10,7 @@ import { Container } from "@/components/ui/primitives";
 import { cn } from "@/lib/utils";
 
 export default function AccountLayout({ children }: { children: React.ReactNode }) {
-  const { user, loading, isOwner, isBuyer } = useAuth();
+  const { user, loading } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
 
@@ -22,25 +22,17 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
     return <Container className="py-24 text-center text-muted">Loading…</Container>;
   }
 
-  // demo/default users with no explicit role are treated as buyers
-  const owner = isOwner;
-  const buyer = isBuyer || (!isOwner && !isBuyer);
-
   const items = [
-    ...(owner ? [
-      { href: "/account/listings", label: "My listings", icon: Home },
-      { href: "/account/leads", label: "Leads", icon: Inbox },
-    ] : []),
-    ...(buyer ? [
-      { href: "/account/inquiries", label: "My inquiries", icon: MessageSquare },
-      { href: "/account/saved", label: "Saved", icon: Heart },
-    ] : []),
+    { href: "/account/activity", label: "Activity", icon: MessageSquare },
+    { href: "/account/listings", label: "Listing requests", icon: Home },
+    { href: "/account/saved", label: "Saved", icon: Heart },
+    { href: "/account/profile", label: "Profile", icon: UserRound },
   ];
 
   return (
     <Container className="py-10">
-      <h1 className="text-3xl font-bold tracking-tight">Hi, {user.name.split(" ")[0]}</h1>
-      <p className="mt-1 text-muted">Manage your ValEstate activity.</p>
+      <h1 className="text-3xl font-bold tracking-tight">Hi, {user.name.split(" ")[0] || "there"}</h1>
+      <p className="mt-1 text-muted">Manage your Estara Properties activity.</p>
 
       <div className="mt-8 grid gap-6 lg:grid-cols-[240px_1fr]">
         <aside>

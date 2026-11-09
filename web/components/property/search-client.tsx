@@ -2,163 +2,177 @@
 
 import { Search, SlidersHorizontal, X } from "lucide-react";
 import { useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
-import { Select } from "@/components/ui/field";
+import { useEffect, useState } from "react";
+import { buttonVariants } from "@/components/ui/button";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Container } from "@/components/ui/primitives";
-import { PROPERTIES } from "@/lib/mock-data";
-import type { Intent, PropertyType } from "@/lib/types";
+import { api } from "@/lib/api";
+import type { ListingSummary, Pagination } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { FilterPanel, type Filters, defaultFilters } from "./filter-panel";
+import { FilterPanel, type Filters, type Masters } from "./filter-panel";
 import { PropertyCard } from "./property-card";
 
-function boundsFor(intent: "" | Intent): [number, number] {
-  const pool = PROPERTIES.filter((p) => !intent || p.intent === intent).map((p) => p.price);
-  return [Math.min(...pool), Math.max(...pool)];
-}
+const num = (v: string | null) => (v && Number(v) > 0 ? Number(v) : undefined);
+const hasFilters = (f: Filters) => Object.values(f).some(Boolean);
 
-export function SearchClient() {
+type Result = { items: ListingSummary[]; pagination: Pagination | null; error: string | null; loading: boolean };
+
+/**
+ * Text search (/masters/searchprop) and structured filters (/masters/filterprop)
+ * are separate endpoints that can't be combined, so filters take precedence.
+ */
+export function SearchClient({ masters }: { masters: Masters }) {
   const params = useSearchParams();
-  const initialIntent = (params.get("intent") as Intent | null) ?? "";
-  const initialType = params.get("type") as PropertyType | null;
-  const initialLocality = params.get("locality");
-
   const [filters, setFilters] = useState<Filters>(() => ({
-    ...defaultFilters(boundsFor(initialIntent)),
-    intent: initialIntent,
-    types: initialType ? [initialType] : [],
-    localities: initialLocality ? [initialLocality] : [],
+    real_estate_type_id: num(params.get("type")),
+    property_type_id: num(params.get("ptype")),
+    budget_id: num(params.get("budget")),
+    state_id: num(params.get("state")),
+    district_id: num(params.get("district")),
   }));
+  const [q, setQ] = useState(params.get("q") ?? "");
+  const [debouncedQ, setDebouncedQ] = useState(q);
+  const [page, setPage] = useState(1);
   const [drawer, setDrawer] = useState(false);
+  const [attempt, setAttempt] = useState(0);
+  const [res, setRes] = useState<Result>({ items: [], pagination: null, error: null, loading: true });
 
-  const bounds = useMemo(() => boundsFor(filters.intent), [filters.intent]);
-  const boundsKey = bounds.join("-");
+  const filtered = hasFilters(filters);
 
-  // reset the budget range when the intent (and thus price scale) changes
   useEffect(() => {
-    setFilters((f) => ({ ...f, price: bounds }));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [boundsKey]);
+    const t = setTimeout(() => setDebouncedQ(q), 350);
+    return () => clearTimeout(t);
+  }, [q]);
 
-  const set = (patch: Partial<Filters>) => setFilters((f) => ({ ...f, ...patch }));
-  const clear = () => setFilters(defaultFilters(boundsFor("")));
+  useEffect(() => {
+    let cancelled = false;
+    setRes((r) => ({ ...r, loading: true, error: null }));
+    const req = filtered ? api.filter(filters, page) : api.search(debouncedQ.trim(), page);
+    req
+      .then((r) => {
+        if (cancelled) return;
+        setRes((prev) => ({
+          items: page === 1 ? r.data : [...prev.items, ...r.data],
+          pagination: r.pagination,
+          error: null,
+          loading: false,
+        }));
+      })
+      .catch((e: unknown) => {
+        if (!cancelled) setRes((prev) => ({ ...prev, loading: false, error: e instanceof Error ? e.message : "Search failed." }));
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [filters, debouncedQ, page, filtered, attempt]);
 
-  const results = useMemo(() => {
-    let r = PROPERTIES.slice();
-    if (filters.intent) r = r.filter((p) => p.intent === filters.intent);
-    if (filters.types.length) r = r.filter((p) => filters.types.includes(p.type));
-    if (filters.localities.length) r = r.filter((p) => filters.localities.includes(p.localitySlug));
-    r = r.filter((p) => p.price >= filters.price[0] && p.price <= filters.price[1]);
-    if (filters.bedrooms) r = r.filter((p) => (p.bedrooms ?? 0) >= filters.bedrooms);
-    if (filters.bathrooms) r = r.filter((p) => (p.bathrooms ?? 0) >= filters.bathrooms);
-    if (filters.furnishing.length) r = r.filter((p) => p.furnishing && filters.furnishing.includes(p.furnishing));
-    if (filters.amenities.length) r = r.filter((p) => filters.amenities.every((a) => p.amenities.includes(a)));
-    if (filters.q.trim()) {
-      const q = filters.q.toLowerCase();
-      r = r.filter(
-        (p) =>
-          p.title.toLowerCase().includes(q) ||
-          p.localityName.toLowerCase().includes(q) ||
-          p.address.toLowerCase().includes(q),
-      );
-    }
-    switch (filters.sort) {
-      case "newest":
-        r.sort((a, b) => +new Date(b.postedAt) - +new Date(a.postedAt));
-        break;
-      case "price-asc":
-        r.sort((a, b) => a.price - b.price);
-        break;
-      case "price-desc":
-        r.sort((a, b) => b.price - a.price);
-        break;
-    }
-    return r;
-  }, [filters]);
+  const set = (patch: Partial<Filters>) => {
+    setPage(1);
+    setFilters((f) => ({ ...f, ...patch }));
+  };
+  const clear = () => {
+    setPage(1);
+    setFilters({});
+  };
+  const total = res.pagination?.total ?? res.items.length;
 
   return (
     <Container className="pt-8">
-      {/* search + sort bar */}
       <div className="glass-panel flex flex-col gap-3 rounded-4xl p-3 sm:flex-row sm:items-center">
-        <div className="glass-input flex flex-1 items-center gap-2 rounded-2xl px-4">
+        <label className="glass-input flex flex-1 items-center gap-2 rounded-2xl px-4">
           <Search className="h-5 w-5 shrink-0 text-brand" />
+          <span className="sr-only">Search</span>
           <input
-            value={filters.q}
-            onChange={(e) => set({ q: e.target.value })}
-            placeholder="Search by title, locality or address…"
-            className="h-11 w-full bg-transparent text-sm outline-none placeholder:text-subtle"
+            value={q}
+            onChange={(e) => {
+              setPage(1);
+              setQ(e.target.value);
+            }}
+            disabled={filtered}
+            placeholder={filtered ? "Reset filters to search by text" : "Search by address or city…"}
+            className="h-11 w-full bg-transparent text-sm outline-none placeholder:text-subtle disabled:cursor-not-allowed"
           />
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setDrawer(true)}
-            className="glass inline-flex h-11 items-center gap-2 rounded-2xl px-4 text-sm font-medium lg:hidden"
-          >
-            <SlidersHorizontal className="h-4 w-4" /> Filters
-          </button>
-          <Select value={filters.sort} onChange={(e) => set({ sort: e.target.value as Filters["sort"] })} className="w-auto min-w-[150px]">
-            <option value="relevance">Sort: Relevance</option>
-            <option value="newest">Newest first</option>
-            <option value="price-asc">Price: Low to High</option>
-            <option value="price-desc">Price: High to Low</option>
-          </Select>
-        </div>
+        </label>
+        <button
+          onClick={() => setDrawer(true)}
+          className="glass inline-flex h-11 items-center gap-2 rounded-2xl px-4 text-sm font-medium lg:hidden"
+        >
+          <SlidersHorizontal className="h-4 w-4" /> Filters
+        </button>
       </div>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[300px_1fr]">
-        {/* desktop sidebar */}
         <aside className="hidden lg:block">
           <GlassCard className="sticky top-24 max-h-[calc(100vh-7rem)] overflow-auto p-6">
-            <FilterPanel filters={filters} set={set} bounds={bounds} onClear={clear} />
+            <FilterPanel filters={filters} set={set} masters={masters} onClear={clear} />
           </GlassCard>
         </aside>
 
-        {/* results */}
         <div>
           <div className="mb-5 flex items-center justify-between">
-            <h1 className="text-lg font-semibold">
-              {results.length} verified {results.length === 1 ? "property" : "properties"}
-              <span className="text-muted"> in Imphal</span>
+            <h1 className="text-lg font-semibold" aria-live="polite">
+              {res.loading && page === 1 ? "Searching…" : `${total} verified ${total === 1 ? "property" : "properties"}`}
             </h1>
           </div>
 
-          {results.length === 0 ? (
+          {res.error && res.items.length === 0 ? (
+            <GlassCard className="grid place-items-center p-16 text-center">
+              <p className="text-lg font-semibold">Couldn&apos;t load results</p>
+              <p className="mt-1 max-w-sm text-sm text-muted">{res.error}</p>
+              <button onClick={() => setAttempt((n) => n + 1)} className="mt-4 text-sm font-semibold text-brand hover:underline">
+                Try again
+              </button>
+            </GlassCard>
+          ) : !res.loading && res.items.length === 0 ? (
             <GlassCard className="grid place-items-center p-16 text-center">
               <p className="text-lg font-semibold">No matches</p>
               <p className="mt-1 max-w-sm text-sm text-muted">
-                Try widening your budget or clearing some filters. Every listing here is verified — so there are simply fewer, better results.
+                Try clearing some filters. Every listing here is verified — so there are simply fewer, better results.
               </p>
               <button onClick={clear} className="mt-4 text-sm font-semibold text-brand hover:underline">
                 Clear all filters
               </button>
             </GlassCard>
           ) : (
-            <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
-              {results.map((p) => (
-                <PropertyCard key={p.id} property={p} />
-              ))}
-            </div>
+            <>
+              <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
+                {res.items.map((p) => (
+                  <PropertyCard key={p.id} property={p} />
+                ))}
+              </div>
+              {res.error && <p role="alert" className="mt-4 text-sm text-red-500">{res.error}</p>}
+              {res.pagination?.hasMore && (
+                <div className="mt-8 text-center">
+                  <button
+                    onClick={() => setPage((n) => n + 1)}
+                    disabled={res.loading}
+                    className={buttonVariants({ variant: "glass", size: "md" })}
+                  >
+                    {res.loading ? "Loading…" : "Load more"}
+                  </button>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>
 
-      {/* mobile drawer */}
       {drawer && (
         <div className="fixed inset-0 z-[60] lg:hidden">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setDrawer(false)} />
           <div className="glass-panel animate-fade-up absolute inset-y-0 right-0 w-[88%] max-w-sm overflow-auto p-6">
             <div className="mb-4 flex items-center justify-between">
               <span className="font-bold">Filters</span>
-              <button onClick={() => setDrawer(false)} className="glass grid h-9 w-9 place-items-center rounded-full">
+              <button onClick={() => setDrawer(false)} aria-label="Close filters" className="glass grid h-9 w-9 place-items-center rounded-full">
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <FilterPanel filters={filters} set={set} bounds={bounds} onClear={clear} />
+            <FilterPanel filters={filters} set={set} masters={masters} onClear={clear} />
             <button
               onClick={() => setDrawer(false)}
               className={cn("mt-6 w-full rounded-full brand-gradient py-3 font-semibold text-white shadow-glow")}
             >
-              Show {results.length} results
+              Show {total} results
             </button>
           </div>
         </div>

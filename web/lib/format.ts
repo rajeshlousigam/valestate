@@ -1,4 +1,4 @@
-/** Indian numbering: ₹, lakh/crore. ValEstate launch city = Imphal (docs/24). */
+/** Indian numbering: ₹, lakh/crore. */
 export function formatINR(amount: number): string {
   if (amount >= 10000000) {
     const cr = amount / 10000000;
@@ -14,21 +14,9 @@ export function formatINR(amount: number): string {
   return `₹${amount}`;
 }
 
-/** Rent shown as ₹X,XXX/mo with Indian grouping. */
-export function formatRent(amount: number): string {
-  return `${groupINR(amount)}/mo`;
-}
-
-export function groupINR(amount: number): string {
-  return "₹" + amount.toLocaleString("en-IN");
-}
-
 function trim(n: number): string {
-  return n.toFixed(n % 1 === 0 ? 0 : 2).replace(/\.00$/, "");
-}
-
-export function formatArea(sqft: number): string {
-  return `${sqft.toLocaleString("en-IN")} sqft`;
+  // 4.5 → "4.5", 4.25 → "4.25", 4 → "4"
+  return String(Number(n.toFixed(2)));
 }
 
 export function relativeDate(iso: string): string {
@@ -39,3 +27,20 @@ export function relativeDate(iso: string): string {
   if (days < 30) return `${Math.floor(days / 7)}w ago`;
   return `${Math.floor(days / 30)}mo ago`;
 }
+
+/** API amounts arrive as strings ("4500.00"); empty/non-numeric → null. */
+export function costLabel(amount: string | undefined, type?: string): string | null {
+  const n = Number(amount);
+  if (!amount || !Number.isFinite(n) || n <= 0) return null;
+  return type ? `${formatINR(n)} · ${type}` : formatINR(n);
+}
+
+export function formatDate(iso: string): string {
+  const d = new Date(iso);
+  return Number.isNaN(d.getTime())
+    ? iso
+    : d.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
+}
+
+/** Master values use "NA" as a placeholder; hide those. */
+export const present = (v?: string | null): v is string => !!v && v.trim() !== "" && v.trim().toUpperCase() !== "NA";

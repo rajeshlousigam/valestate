@@ -1,0 +1,47 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================================
+   ValEstate — professional Manipur / Imphal palette (parity with
+   web/app/globals.css). Loktak emerald + Kangla gold. Values are
+   HSL triplets consumed as hsl(var(--x) / <alpha>) in tailwind.config.js.
+   Light = :root · Dark = prefers-color-scheme (follows the device).
+   ============================================================ */
+:root {
+  --bg: 196 28% 97%;
+  --surface: 0 0% 100%;
+  --fg: 200 30% 13%;
+  --muted: 200 14% 36%;
+  --subtle: 200 12% 52%;
+  --line: 200 18% 84%;
+  --field: 200 20% 68%;
+
+  --brand: 170 78% 30%;
+  --brand-2: 190 82% 36%;
+  --brand-soft: 174 44% 91%;
+  --accent: 40 84% 45%;
+
+  --success: 152 60% 40%;
+  --warning: 32 90% 50%;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: 197 32% 7%;
+    --surface: 198 24% 11%;
+    --fg: 195 22% 96%;
+    --muted: 196 13% 68%;
+    --subtle: 196 11% 52%;
+    --line: 198 20% 22%;
+    --field: 196 15% 40%;
+
+    --brand: 166 72% 47%;
+    --brand-2: 188 78% 52%;
+    --brand-soft: 190 40% 15%;
+    --accent: 42 88% 60%;
+
+    --success: 152 58% 50%;
+    --warning: 38 92% 58%;
+  }
+}

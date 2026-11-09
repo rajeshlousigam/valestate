@@ -1,4 +1,4 @@
-import { ArrowRight, Building2, FileCheck2, LandPlot, PhoneCall, ScanFace, ShieldCheck, Sparkles, TrendingUp } from "lucide-react";
+import { ArrowRight, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { PropertyCard } from "@/components/property/property-card";
 import { SearchHero } from "@/components/property/search-hero";
@@ -8,38 +8,28 @@ import { GlassCard } from "@/components/ui/glass-card";
 import { Container, Eyebrow, SectionHeading } from "@/components/ui/primitives";
 import { SpecularCTA } from "@/components/ui/specular-cta";
 import { VerifiedBadge } from "@/components/ui/verified-badge";
-import { LOCALITIES, PROPERTIES } from "@/lib/mock-data";
+import { api, assetUrl, fetchMasters } from "@/lib/api";
+import type { ListingSummary } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
-const featured = PROPERTIES.filter((p) => p.featured).slice(0, 6);
+export const revalidate = 300;
 
-const STATS = [
-  { value: "100%", label: "Verified before public" },
-  { value: `${LOCALITIES.length}+`, label: "Localities in Imphal" },
-  { value: "0", label: "Broker calls" },
-  { value: "<1 day", label: "Avg. verification" },
-];
+// Each section degrades to hidden if its endpoint fails or is empty.
+const safe = <T,>(p: Promise<T[]>) => p.catch((): T[] => []);
 
-const STEPS = [
-  { icon: FileCheck2, title: "Owner submits", desc: "The owner uploads the property with ownership documents." },
-  { icon: ScanFace, title: "We verify identity + docs", desc: "Our ops team checks the documents and the owner's identity." },
-  { icon: PhoneCall, title: "We call to confirm", desc: "A quick call confirms the details are real and available." },
-  { icon: ShieldCheck, title: "It goes live — verified", desc: "Only then does the listing appear, with a verified badge." },
-];
+export default async function Home() {
+  const [masters, banners, stats, enquiry, booking, howVerify, whyTrust] = await Promise.all([
+    fetchMasters(),
+    safe(api.banners()),
+    safe(api.stats()),
+    safe(api.latestEnquiry()),
+    safe(api.latestBooking()),
+    safe(api.howVerify()),
+    safe(api.whyTrust()),
+  ]);
+  const how = howVerify[0];
+  const why = whyTrust[0];
 
-const TYPES = [
-  { type: "RESIDENTIAL", label: "Homes & Flats", desc: "Apartments, houses & duplexes", icon: Building2, href: "/search?type=RESIDENTIAL", cover: 0 },
-  { type: "COMMERCIAL", label: "Commercial", desc: "Shops, offices & showrooms", icon: TrendingUp, href: "/search?type=COMMERCIAL", cover: 10 },
-  { type: "LAND", label: "Land & Plots", desc: "Verified-title plots", icon: LandPlot, href: "/search?type=LAND", cover: 13 },
-];
-
-const WHY = [
-  { icon: ShieldCheck, title: "No fake listings", desc: "Every property is human-verified before you ever see it. What you see is real and available." },
-  { icon: PhoneCall, title: "No broker spam", desc: "Talk to the actual owner. Your number is never sold to a wall of brokers." },
-  { icon: Sparkles, title: "No duplicates", desc: "One canonical listing per property — no more the-same-flat-six-times." },
-];
-
-export default function Home() {
   return (
     <>
       {/* ---------- HERO ---------- */}
@@ -53,142 +43,135 @@ export default function Home() {
               Find a home you can <span className="brand-text">actually trust</span>.
             </h1>
             <p className="animate-fade-up mx-auto mt-5 max-w-xl text-balance text-lg text-muted">
-              Every listing on ValEstate is verified by our team — documents, identity and a
-              real call — before it goes public. No fakes, no duplicates, no brokers.
+              Every listing on Estara Properties is verified by our team before it goes public. No fakes, no
+              duplicates, no brokers.
             </p>
           </div>
 
           <div className="animate-fade-up mx-auto mt-10 max-w-4xl">
-            <SearchHero />
+            <SearchHero masters={masters} />
           </div>
 
-          <div className="mx-auto mt-10 grid max-w-4xl grid-cols-2 gap-3 sm:grid-cols-4">
-            {STATS.map((s) => (
-              <GlassCard key={s.label} className="p-5 text-center">
-                <p className="text-2xl font-bold brand-text sm:text-3xl">{s.value}</p>
-                <p className="mt-1 text-xs text-muted">{s.label}</p>
-              </GlassCard>
-            ))}
-          </div>
+          {stats.length > 0 && (
+            <div className="mx-auto mt-10 flex max-w-4xl flex-wrap justify-center gap-3">
+              {stats.map((s) => (
+                <GlassCard key={s.id} className="min-w-[160px] flex-1 p-5 text-center">
+                  <p className="text-2xl font-bold brand-text sm:text-3xl">{s.header}</p>
+                  <p className="mt-1 text-xs text-muted">{s.body}</p>
+                </GlassCard>
+              ))}
+            </div>
+          )}
         </Container>
       </section>
 
-      {/* ---------- FEATURED LISTINGS ---------- */}
-      <section className="pt-24">
-        <Container>
-          <div className="flex items-end justify-between gap-4">
-            <SectionHeading
-              eyebrow="Handpicked"
-              title="Featured verified listings"
-              subtitle="Freshly verified properties across Imphal, ready to explore."
-            />
-            <Link href="/search" className={cn(buttonVariants({ variant: "glass", size: "sm" }), "hidden shrink-0 sm:inline-flex")}>
-              View all <ArrowRight className="h-4 w-4" />
-            </Link>
-          </div>
-          <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {featured.map((p) => (
-              <PropertyCard key={p.id} property={p} />
-            ))}
-          </div>
-        </Container>
-      </section>
+      {/* ---------- BANNERS ---------- */}
+      {banners.length > 0 && (
+        <section className="pt-16">
+          <Container>
+            <div className="no-scrollbar flex snap-x gap-5 overflow-x-auto pb-2">
+              {banners.map((b) => (
+                <Cover
+                  key={b.id}
+                  index={b.id}
+                  src={assetUrl("banner", b.image)}
+                  alt={b.title}
+                  className="aspect-[21/9] w-[85%] shrink-0 snap-start sm:w-[60%]"
+                  rounded="rounded-4xl"
+                >
+                  <div className="absolute inset-x-0 bottom-0 p-6">
+                    <h3 className="text-xl font-bold text-white">{b.title}</h3>
+                    <p className="text-sm text-white/85">{b.body}</p>
+                  </div>
+                </Cover>
+              ))}
+            </div>
+          </Container>
+        </section>
+      )}
+
+      <ListingSection
+        eyebrow="Fresh"
+        title="Newly listed properties"
+        subtitle="Verified properties across Imphal, ready to enquire about."
+        items={enquiry}
+      />
+      <ListingSection
+        eyebrow="Visit in person"
+        title="Book a site visit"
+        subtitle="Pick a time slot and see the property today."
+        items={booking}
+        booking
+      />
 
       {/* ---------- HOW IT WORKS ---------- */}
-      <section id="how-it-works" className="scroll-mt-24 pt-24">
-        <Container>
-          <SectionHeading
-            align="center"
-            eyebrow="How verification works"
-            title="Why a listing here means something"
-            subtitle="Other portals let anyone post anything. We don't. Here's the gate every property passes through."
-          />
-          <div className="mt-12 grid gap-5 md:grid-cols-4">
-            {STEPS.map((step, i) => (
-              <GlassCard key={step.title} className="relative p-6">
-                <span className="absolute right-5 top-5 text-5xl font-bold text-fg/[0.06]">{i + 1}</span>
-                <span className="grid h-12 w-12 place-items-center rounded-2xl brand-gradient text-white shadow-glow">
-                  <step.icon className="h-6 w-6" />
-                </span>
-                <h3 className="mt-4 font-semibold">{step.title}</h3>
-                <p className="mt-1.5 text-sm text-muted">{step.desc}</p>
-              </GlassCard>
-            ))}
-          </div>
-        </Container>
-      </section>
+      {how && (
+        <section id="how-it-works" className="scroll-mt-24 pt-24">
+          <Container>
+            <SectionHeading align="center" eyebrow="How verification works" title={how.header} subtitle={how.short_notes} />
+            <div className="mt-12 grid gap-5 md:grid-cols-4">
+              {how.types.map((step, i) => (
+                <GlassCard key={step.id} className="relative p-6">
+                  <span className="absolute right-5 top-5 text-5xl font-bold text-fg/[0.06]">{i + 1}</span>
+                  <Icon src={assetUrl("landing", step.icon)} />
+                  <h3 className="mt-4 font-semibold">{step.title}</h3>
+                  <p className="mt-1.5 text-sm text-muted">{step.notes}</p>
+                </GlassCard>
+              ))}
+            </div>
+          </Container>
+        </section>
+      )}
 
-      {/* ---------- BROWSE BY TYPE ---------- */}
-      <section className="pt-24">
-        <Container>
-          <SectionHeading eyebrow="Browse" title="What are you looking for?" />
-          <div className="mt-8 grid gap-6 md:grid-cols-3">
-            {TYPES.map((t) => (
-              <Link key={t.type} href={t.href} className="card-hover block rounded-4xl">
-                <Cover index={t.cover} className="aspect-[16/9]" rounded="rounded-4xl">
-                  <div className="absolute inset-0 flex flex-col justify-end p-6">
-                    <span className="grid h-11 w-11 place-items-center rounded-2xl bg-white/20 text-white backdrop-blur-md">
-                      <t.icon className="h-6 w-6" />
-                    </span>
-                    <h3 className="mt-3 text-xl font-bold text-white">{t.label}</h3>
-                    <p className="text-sm text-white/80">{t.desc}</p>
-                  </div>
-                </Cover>
-              </Link>
-            ))}
-          </div>
-        </Container>
-      </section>
-
-      {/* ---------- LOCALITIES ---------- */}
-      <section className="pt-24">
-        <Container>
-          <SectionHeading eyebrow="Neighbourhoods" title="Popular localities in Imphal" />
-          <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-            {LOCALITIES.map((l) => (
-              <Link key={l.slug} href={`/search?locality=${l.slug}`} className="card-hover block rounded-3xl">
-                <Cover index={l.cover} className="aspect-[4/3]" rounded="rounded-3xl">
-                  <div className="absolute inset-0 flex flex-col justify-end p-4">
-                    <h3 className="font-semibold text-white">{l.name}</h3>
-                    <p className="text-xs text-white/80">{l.listings} verified · {l.area}</p>
-                  </div>
-                </Cover>
-              </Link>
-            ))}
-          </div>
-        </Container>
-      </section>
+      {/* ---------- BROWSE BY PURPOSE ---------- */}
+      {masters.realEstateTypes.length > 0 && (
+        <section className="pt-24">
+          <Container>
+            <SectionHeading eyebrow="Browse" title="What are you looking for?" />
+            <div className="mt-8 grid gap-6 md:grid-cols-3">
+              {masters.realEstateTypes.map((t) => (
+                <Link key={t.id} href={`/search?type=${t.id}`} className="card-hover block rounded-4xl">
+                  <Cover index={t.id} src={assetUrl("realestate", t.real_estate_img)} alt={t.type_name} className="aspect-[16/9]" rounded="rounded-4xl">
+                    <div className="absolute inset-0 flex flex-col justify-end p-6">
+                      <h3 className="text-xl font-bold text-white">{t.type_name}</h3>
+                    </div>
+                  </Cover>
+                </Link>
+              ))}
+            </div>
+          </Container>
+        </section>
+      )}
 
       {/* ---------- WHY ---------- */}
-      <section id="why" className="scroll-mt-24 pt-24">
-        <Container>
-          <SectionHeading align="center" eyebrow="The ValEstate difference" title="Trust, built into every listing" />
-          <div className="mt-12 grid gap-6 md:grid-cols-3">
-            {WHY.map((w) => (
-              <GlassCard key={w.title} panel className="p-7">
-                <span className="grid h-12 w-12 place-items-center rounded-2xl bg-brand-soft text-brand">
-                  <w.icon className="h-6 w-6" />
-                </span>
-                <h3 className="mt-4 text-lg font-semibold">{w.title}</h3>
-                <p className="mt-2 text-sm text-muted">{w.desc}</p>
-              </GlassCard>
-            ))}
-          </div>
-        </Container>
-      </section>
+      {why && (
+        <section id="why" className="scroll-mt-24 pt-24">
+          <Container>
+            <SectionHeading align="center" eyebrow={why.header} title={why.short_notes} />
+            <div className="mt-12 grid gap-6 md:grid-cols-3">
+              {why.types.map((w) => (
+                <GlassCard key={w.id} panel className="p-7">
+                  <Icon src={assetUrl("landing", w.icon)} soft />
+                  <h3 className="mt-4 text-lg font-semibold">{w.title}</h3>
+                  <p className="mt-2 text-sm text-muted">{w.short_description}</p>
+                </GlassCard>
+              ))}
+            </div>
+          </Container>
+        </section>
+      )}
 
       {/* ---------- CTA ---------- */}
       <section className="pt-24">
         <Container>
           <GlassCard panel className="relative overflow-hidden rounded-5xl p-10 text-center sm:p-16">
-            <Cover index={4} className="absolute inset-0 opacity-25" rounded="rounded-none" />
             <div className="relative">
-              <VerifiedBadge className="mx-auto" label="Free verification at launch" />
+              <VerifiedBadge className="mx-auto" label="Verified before it goes live" />
               <h2 className="mt-4 text-balance text-3xl font-bold tracking-tight sm:text-4xl">
                 Own a property in Imphal? List it — verified.
               </h2>
               <p className="mx-auto mt-3 max-w-xl text-muted">
-                Get the verified badge, reach genuine buyers, and manage every inquiry in one place.
+                Tell us about your property and our team will verify it before it reaches genuine buyers.
               </p>
               <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
                 <SpecularCTA href="/list-property" size="lg">
@@ -203,5 +186,54 @@ export default function Home() {
         </Container>
       </section>
     </>
+  );
+}
+
+function ListingSection({
+  eyebrow,
+  title,
+  subtitle,
+  items,
+  booking = false,
+}: {
+  eyebrow: string;
+  title: string;
+  subtitle: string;
+  items: ListingSummary[];
+  booking?: boolean;
+}) {
+  if (!items.length) return null;
+  return (
+    <section className="pt-24">
+      <Container>
+        <div className="flex items-end justify-between gap-4">
+          <SectionHeading eyebrow={eyebrow} title={title} subtitle={subtitle} />
+          <Link href="/search" className={cn(buttonVariants({ variant: "glass", size: "sm" }), "hidden shrink-0 sm:inline-flex")}>
+            View all <ArrowRight className="h-4 w-4" />
+          </Link>
+        </div>
+        <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {items.map((p) => (
+            <PropertyCard key={p.id} property={p} booking={booking} />
+          ))}
+        </div>
+      </Container>
+    </section>
+  );
+}
+
+function Icon({ src, soft = false }: { src?: string; soft?: boolean }) {
+  return (
+    <span
+      className={cn(
+        "grid h-12 w-12 place-items-center overflow-hidden rounded-2xl",
+        soft ? "bg-brand-soft" : "brand-gradient shadow-glow",
+      )}
+    >
+      {src && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={src} alt="" className="h-7 w-7 object-contain" loading="lazy" />
+      )}
+    </span>
   );
 }

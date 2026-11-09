@@ -1,7 +1,4 @@
-/**
- * Self-contained gradient "covers" (no external images) so the design is fully
- * offline + on-brand during the mock phase. Swap for real photos (S3/CDN) later.
- */
+/** On-brand gradient fallbacks shown behind / instead of listing images. */
 export const COVERS: string[] = [
   "linear-gradient(135deg, #0f766e 0%, #22d3ee 55%, #6366f1 100%)",
   "linear-gradient(135deg, #7c3aed 0%, #db2777 60%, #f59e0b 100%)",
