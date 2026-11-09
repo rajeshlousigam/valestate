@@ -40,14 +40,11 @@ export default async function Home() {
       {banners.length > 0 && (
         <HeroBanner slides={banners.map((b) => ({ id: b.id, title: b.title, body: b.body, image: assetUrl("banner", b.image) }))} />
       )}
-      <SkylineDivider className={banners.length > 0 ? "pt-3" : "pt-8"} />
+      <SkylineDivider className={banners.length > 0 ? "pt-2" : "pt-6"} />
       <section className="pt-4 sm:pt-5">
         <Container>
           <div className="mx-auto max-w-3xl text-center">
-            <Eyebrow className="animate-fade-up">
-              <Sparkles className="h-3.5 w-3.5" /> Verified real estate · Imphal, Manipur
-            </Eyebrow>
-            <h1 className="animate-fade-up mt-3 text-balance text-2xl font-bold leading-tight tracking-tight sm:text-4xl">
+            <h1 className="animate-fade-up text-balance text-2xl font-bold leading-tight tracking-tight sm:text-4xl">
               Find a home you can <span className="brand-text">actually trust</span>.
             </h1>
             <p className="animate-fade-up mx-auto mt-2 text-balance text-sm text-fg/70 sm:text-base">
@@ -56,6 +53,11 @@ export default async function Home() {
           </div>
           <div className="animate-fade-up mx-auto mt-5 max-w-4xl">
             <SearchHero masters={masters} />
+          </div>
+          <div className="mt-5 flex justify-center">
+            <Eyebrow>
+              <Sparkles className="h-3.5 w-3.5" /> Verified real estate · Imphal, Manipur
+            </Eyebrow>
           </div>
         </Container>
       </section>
