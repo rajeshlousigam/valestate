@@ -116,14 +116,22 @@ export default async function Home() {
         <section className="pt-24">
           <Container>
             <SectionHeading eyebrow="Browse" title="What are you looking for?" />
-            <div className="mt-8 grid gap-6 md:grid-cols-3">
+            {/* Type images are square (1:1) and often small icons, so cards stay square and modest in size. */}
+            <div className="mt-8 grid max-w-4xl grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-6">
               {masters.realEstateTypes.map((t) => (
-                <Link key={t.id} href={`/search?type=${t.id}`} className="card-hover block rounded-4xl">
-                  <Cover index={t.id} src={assetUrl("realestate", t.real_estate_img)} alt={t.type_name} className="aspect-[16/9]" rounded="rounded-4xl">
-                    <div className="absolute inset-0 flex flex-col justify-end p-6">
-                      <h3 className="text-xl font-bold text-white">{t.type_name}</h3>
-                    </div>
-                  </Cover>
+                <Link key={t.id} href={`/search?type=${t.id}`} className="card-hover glass group block overflow-hidden rounded-4xl">
+                  <Cover
+                    index={t.id}
+                    src={assetUrl("realestate", t.real_estate_img)}
+                    alt={t.type_name}
+                    className="aspect-square"
+                    rounded="rounded-none"
+                    overlay={false}
+                  />
+                  <div className="flex items-center justify-between gap-2 px-4 py-3.5 sm:px-5">
+                    <h3 className="font-semibold text-fg group-hover:text-brand sm:text-lg">{t.type_name}</h3>
+                    <ArrowRight className="h-4 w-4 shrink-0 text-brand transition-transform group-hover:translate-x-0.5" />
+                  </div>
                 </Link>
               ))}
             </div>
