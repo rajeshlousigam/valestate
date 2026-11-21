@@ -11,11 +11,10 @@ import { Stack } from "expo-router";
 import { AuthProvider } from "@/lib/auth";
 import { queryClient } from "@/lib/query";
 import { getOnboarded } from "@/lib/onboarding";
-import { useTheme } from "@/lib/theme";
-import { BrandLogo } from "@/components/BrandLogo";
+import { ThemeProvider, useTheme } from "@/lib/theme";
+import { BRAND_TEAL, BrandLogo } from "@/components/BrandLogo";
 
 export default function RootLayout() {
-  const { c } = useTheme();
   const [onboarded, setOnboarded] = useState<boolean | null>(null);
 
   // Decide the first screen before rendering the navigator (no flash).
@@ -25,9 +24,9 @@ export default function RootLayout() {
 
   if (onboarded === null) {
     return (
-      <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: "#000" }}>
+      <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: BRAND_TEAL }}>
         <BrandLogo size={200} />
-        <ActivityIndicator color="#d4a531" style={{ marginTop: 20 }} />
+        <ActivityIndicator color="#e8c568" style={{ marginTop: 20 }} />
       </View>
     );
   }
@@ -36,26 +35,36 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <QueryClientProvider client={queryClient}>
-          <AuthProvider>
-            <Stack
-              initialRouteName={onboarded ? "(tabs)" : "onboarding"}
-              screenOptions={{
-                headerShown: false,
-                contentStyle: { backgroundColor: c.bg },
-                animation: "slide_from_right",
-              }}
-            >
-              <Stack.Screen name="onboarding" options={{ animation: "fade" }} />
-              <Stack.Screen name="(tabs)" />
-              <Stack.Screen name="listing/[slug]" />
-              <Stack.Screen name="search" />
-              <Stack.Screen name="profile" />
-              <Stack.Screen name="(auth)" options={{ presentation: "modal" }} />
-              <Stack.Screen name="(owner)" />
-            </Stack>
-          </AuthProvider>
+          <ThemeProvider>
+            <AuthProvider>
+              <RootStack initialRoute={onboarded ? "(tabs)" : "onboarding"} />
+            </AuthProvider>
+          </ThemeProvider>
         </QueryClientProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
+  );
+}
+
+/** Reads the theme from inside ThemeProvider so the colours apply to every screen. */
+function RootStack({ initialRoute }: { initialRoute: string }) {
+  const { c } = useTheme();
+  return (
+    <Stack
+      initialRouteName={initialRoute}
+      screenOptions={{
+        headerShown: false,
+        contentStyle: { backgroundColor: c.bg },
+        animation: "slide_from_right",
+      }}
+    >
+      <Stack.Screen name="onboarding" options={{ animation: "fade" }} />
+      <Stack.Screen name="(tabs)" />
+      <Stack.Screen name="listing/[slug]" />
+      <Stack.Screen name="search" />
+      <Stack.Screen name="profile" />
+      <Stack.Screen name="(auth)" options={{ presentation: "modal" }} />
+      <Stack.Screen name="(owner)" />
+    </Stack>
   );
 }

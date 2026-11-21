@@ -11,7 +11,7 @@
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#000000"
+      "backgroundColor": "#1c4955"
     },
     "assetBundlePatterns": [
       "**/*"
@@ -27,7 +27,7 @@
       "package": "com.valestate.app",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#000000"
+        "backgroundColor": "#1c4955"
       }
     },
     "web": {

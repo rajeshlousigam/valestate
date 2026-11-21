@@ -4,6 +4,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Search, ShieldCheck } from "lucide-react-native";
 import { Screen } from "@/components/ui/Screen";
 import { BrandLockup } from "@/components/BrandLogo";
+import { BannerCarousel } from "@/components/BannerCarousel";
 import { Cover } from "@/components/Cover";
 import { PropertyCard } from "@/components/PropertyCard";
 import { assetUrl } from "@/lib/api";
@@ -66,21 +67,17 @@ export default function Home() {
         </LinearGradient>
 
         {banners.data?.length ? (
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ paddingHorizontal: 20, gap: 12, paddingTop: 20 }}
-          >
-            {banners.data.map((b) => (
-              <View key={b.id} style={{ width: width * 0.78 }} className="overflow-hidden rounded-3xl">
-                <Cover uri={assetUrl("banner", b.image)} seed={b.id} rounded={false} style={{ height: 140 }} />
-                <View className="absolute bottom-0 w-full bg-black/45 px-4 py-2.5">
-                  <Text numberOfLines={1} className="font-bold text-white">{b.title}</Text>
-                  <Text numberOfLines={1} className="text-xs text-white/85">{b.body}</Text>
-                </View>
-              </View>
-            ))}
-          </ScrollView>
+          <View className="pt-5">
+            <BannerCarousel
+              width={width}
+              slides={banners.data.map((b) => ({
+                id: b.id,
+                title: b.title,
+                mobile: assetUrl("banner", b.mob_image),
+                desktop: assetUrl("banner", b.desk_image),
+              }))}
+            />
+          </View>
         ) : null}
 
         {types.data?.length ? (

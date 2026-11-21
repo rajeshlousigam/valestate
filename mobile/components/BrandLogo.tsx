@@ -5,13 +5,15 @@ const MARK = require("../assets/brand-mark.png");
 const FULL = require("../assets/brand-logo.jpg");
 // Serif wordmark like the logo; "serif" only resolves on Android.
 const SERIF = Platform.select({ ios: "Georgia", default: "serif" });
+/** Logo tile colour (matches the logo artwork background). */
+export const BRAND_TEAL = "#1c4955";
 
-/** Gold house/towers mark from the Estara Properties logo, on its black tile. */
+/** Gold house/towers mark from the Estara Properties logo, on its teal tile. */
 export function BrandMark({ size = 40 }: { size?: number }) {
   return (
     <View
-      style={{ width: size, height: size, borderRadius: size * 0.28 }}
-      className="items-center justify-center overflow-hidden bg-black"
+      style={{ width: size, height: size, borderRadius: size * 0.28, backgroundColor: BRAND_TEAL }}
+      className="items-center justify-center overflow-hidden"
       accessibilityLabel="Estara Properties"
     >
       <Image source={MARK} style={{ width: size * 0.78, height: size * 0.78 }} contentFit="contain" />
@@ -36,7 +38,7 @@ export function BrandLockup({ size = 36, light = false }: { size?: number; light
   );
 }
 
-/** The full square logo (gold on black), e.g. for the launch screen. */
+/** The full square logo (gold on teal), e.g. for the launch screen. */
 export function BrandLogo({ size = 180 }: { size?: number }) {
   return (
     <Image
