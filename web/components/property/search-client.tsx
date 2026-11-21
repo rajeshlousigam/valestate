@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { buttonVariants } from "@/components/ui/button";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Container } from "@/components/ui/primitives";
-import { api } from "@/lib/api";
+import { searchListings } from "@/lib/api";
 import type { ListingSummary, Pagination } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { FilterPanel, type Filters, type Masters } from "./filter-panel";
@@ -84,10 +84,11 @@ export function SearchClient({ masters }: { masters: Masters }) {
   }, [filters, debouncedQ, pathname, router]);
 
   useEffect(() => {
+    // Abort the in-flight request when inputs change, so only the latest search hits the API.
+    const ctrl = new AbortController();
     let cancelled = false;
     setRes((r) => ({ ...r, loading: true, error: null }));
-    const req = filtered ? api.filter(filters, page) : api.search(debouncedQ.trim(), page);
-    req
+    searchListings(filtered ? filters : { search: debouncedQ }, page, ctrl.signal)
       .then((r) => {
         if (cancelled) return;
         setRes((prev) => ({
@@ -98,10 +99,12 @@ export function SearchClient({ masters }: { masters: Masters }) {
         }));
       })
       .catch((e: unknown) => {
-        if (!cancelled) setRes((prev) => ({ ...prev, loading: false, error: e instanceof Error ? e.message : "Search failed." }));
+        if (cancelled || (e instanceof DOMException && e.name === "AbortError")) return;
+        setRes((prev) => ({ ...prev, loading: false, error: e instanceof Error ? e.message : "Search failed." }));
       });
     return () => {
       cancelled = true;
+      ctrl.abort();
     };
   }, [filters, debouncedQ, page, filtered, attempt]);
 

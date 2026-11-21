@@ -260,6 +260,30 @@ export const api = {
   },
 };
 
+/**
+ * Browser-side listing search via our cached /api/listings route (edge-cached
+ * 60s, one retry on transient upstream errors). Pass an AbortSignal so a newer
+ * search cancels the request for an outdated one.
+ */
+export async function searchListings(
+  f: SearchFilters,
+  page: number,
+  signal?: AbortSignal,
+): Promise<Page<ListingSummary>> {
+  const p = new URLSearchParams({ page: String(page) });
+  const put = (k: string, v?: number) => v && p.set(k, String(v));
+  put("type", f.real_estate_type_id);
+  put("ptype", f.property_type_id);
+  put("budget", f.budget_id);
+  put("state", f.state_id);
+  put("district", f.district_id);
+  if (f.search?.trim()) p.set("search", f.search.trim());
+  const res = await fetch(`/api/listings?${p.toString()}`, { signal, headers: { Accept: "application/json" } });
+  const body = (await res.json().catch(() => ({}))) as Partial<Page<ListingSummary>> & { msg?: string };
+  if (!res.ok) throw new ApiError(body.msg ?? `HTTP ${res.status}`, res.status);
+  return { data: body.data ?? [], pagination: body.pagination ?? EMPTY_PAGE };
+}
+
 /** All dropdown masters in one go; a failed list degrades to empty, not a crash. */
 export async function fetchMasters() {
   const settle = <T,>(p: Promise<T[]>) => p.catch((): T[] => []);
@@ -291,4 +315,16 @@ export async function fetchAllListingSlugs(maxPages = 50): Promise<string[]> {
 }
 
 export const isBookingMode = (mode?: string) => mode?.toLowerCase() === "booking";
+// ---- auth error classification (messages per docs/Auth API Docs.docx) ----
+const apiMsg = (e: unknown) => (e instanceof ApiError ? e.message : "");
+/** Login OTP requested for a number with no account ("Customer not found."). */
+export const isNotRegistered = (e: unknown) =>
+  e instanceof ApiError &&
+  !/already|otp/i.test(e.message) &&
+  (e.status === 404 || /customer not found|not registered|no (such )?(customer|user|account)|does not exist/i.test(e.message));
+/** Signup / phone change for a number that already has an account. */
+export const isAlreadyRegistered = (e: unknown) => /already registered/i.test(apiMsg(e));
+/** Wrong or expired OTP ("Invalid or expired OTP."). */
+export const isBadOtp = (e: unknown) => /otp/i.test(apiMsg(e)) && /invalid|expired|not found|incorrect|wrong/i.test(apiMsg(e));
+
 export const PHONE_RE = /^\d{10}$/;

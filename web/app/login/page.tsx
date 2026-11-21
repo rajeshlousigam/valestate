@@ -2,13 +2,13 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/components/auth/auth-provider";
 import { Input, Label } from "@/components/ui/field";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Container } from "@/components/ui/primitives";
 import { SpecularCTA } from "@/components/ui/specular-cta";
-import { PHONE_RE, api } from "@/lib/api";
+import { PHONE_RE, api, isBadOtp, isNotRegistered } from "@/lib/api";
 
 const errMsg = (e: unknown, fallback: string) => (e instanceof Error ? e.message : fallback);
 
@@ -22,17 +22,28 @@ export default function LoginPage() {
   const [info, setInfo] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  // Set when the API says this number has no account: offer signup instead.
+  const [notRegistered, setNotRegistered] = useState(false);
+
+  // Prefill from /login?phone=… (e.g. when sent here from signup). Read after
+  // mount because this page is statically prerendered.
+  useEffect(() => {
+    const p = new URLSearchParams(window.location.search).get("phone")?.replace(/\D/g, "").slice(0, 10);
+    if (p) setPhone(p);
+  }, []);
 
   async function sendOtp() {
     if (!PHONE_RE.test(phone)) return setError("Enter your 10-digit phone number.");
     setBusy(true);
     setError(null);
+    setNotRegistered(false);
     try {
       const r = await api.requestLoginOtp(phone);
       setInfo(typeof r.msg === "string" ? r.msg : "OTP sent.");
       setStep("otp");
     } catch (e) {
-      setError(errMsg(e, "Could not send the OTP."));
+      if (isNotRegistered(e)) setNotRegistered(true);
+      else setError(errMsg(e, "Could not send the OTP."));
     } finally {
       setBusy(false);
     }
@@ -46,7 +57,11 @@ export default function LoginPage() {
       await verifyLogin(phone, otp);
       router.push("/account");
     } catch (e) {
-      setError(errMsg(e, "Could not verify the OTP."));
+      setError(
+        isBadOtp(e)
+          ? "That code is wrong or has expired (codes last 3 minutes). Check it, or tap Resend OTP for a new one."
+          : errMsg(e, "Could not verify the OTP."),
+      );
     } finally {
       setBusy(false);
     }
@@ -65,6 +80,15 @@ export default function LoginPage() {
         <p className="mt-1 text-sm text-muted">
           {step === "phone" ? "Log in with your phone number." : `Enter the OTP sent to ${phone}.`}
         </p>
+        {notRegistered && (
+          <div role="alert" className="mt-4 rounded-2xl border border-brand/30 bg-brand-soft/60 p-4 text-sm">
+            <p className="font-semibold text-fg">No account for {phone} yet</p>
+            <p className="mt-1 text-muted">Create a free account with this number — it only takes a minute.</p>
+            <SpecularCTA size="sm" className="mt-3" onClick={() => router.push(`/signup?phone=${phone}`)}>
+              Create an account
+            </SpecularCTA>
+          </div>
+        )}
         {error && <div role="alert" className="mt-4 rounded-2xl bg-red-500/10 px-4 py-3 text-sm text-red-500">{error}</div>}
         {step === "otp" && info && !error && <p className="mt-4 text-sm text-muted">{info}</p>}
         <form onSubmit={submit} className="mt-6 space-y-4">
@@ -77,7 +101,10 @@ export default function LoginPage() {
                 autoComplete="tel-national"
                 maxLength={10}
                 value={phone}
-                onChange={(e) => setPhone(e.target.value.replace(/\D/g, ""))}
+                onChange={(e) => {
+                  setPhone(e.target.value.replace(/\D/g, ""));
+                  setNotRegistered(false);
+                }}
                 required
                 autoFocus
                 placeholder="9876543210"
@@ -123,7 +150,7 @@ export default function LoginPage() {
         )}
         <p className="mt-5 text-center text-sm text-muted">
           New here?{" "}
-          <Link href="/signup" className="font-semibold text-brand hover:underline">Create an account</Link>
+          <Link href={PHONE_RE.test(phone) ? `/signup?phone=${phone}` : "/signup"} className="font-semibold text-brand hover:underline">Create an account</Link>
         </p>
       </GlassCard>
     </Container>

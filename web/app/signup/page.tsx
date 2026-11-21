@@ -2,12 +2,12 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Input, Label } from "@/components/ui/field";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Container } from "@/components/ui/primitives";
 import { SpecularCTA } from "@/components/ui/specular-cta";
-import { PHONE_RE, api } from "@/lib/api";
+import { PHONE_RE, api, isAlreadyRegistered, isBadOtp } from "@/lib/api";
 
 const errMsg = (e: unknown, fallback: string) => (e instanceof Error ? e.message : fallback);
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -25,15 +25,28 @@ export default function SignupPage() {
   const [form, setForm] = useState({ name: "", whatsapp: "", address: "", email: "" });
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  // Set when the API says this number already has an account: offer login instead.
+  const [alreadyRegistered, setAlreadyRegistered] = useState(false);
+
+  // Prefill from /signup?phone=… (e.g. when sent here from login). Read after
+  // mount because this page is statically prerendered.
+  useEffect(() => {
+    const p = new URLSearchParams(window.location.search).get("phone")?.replace(/\D/g, "").slice(0, 10);
+    if (p) setPhone(p);
+  }, []);
   const set = (k: keyof typeof form, v: string) => setForm((f) => ({ ...f, [k]: v }));
 
   async function run(fn: () => Promise<void>, fallback: string) {
     setBusy(true);
     setError(null);
+    setAlreadyRegistered(false);
     try {
       await fn();
     } catch (e) {
-      setError(errMsg(e, fallback));
+      if (isAlreadyRegistered(e)) setAlreadyRegistered(true);
+      else if (isBadOtp(e))
+        setError("That code is wrong or has expired (codes last 5 minutes). Check it, or go back and request a new one.");
+      else setError(errMsg(e, fallback));
     } finally {
       setBusy(false);
     }
@@ -83,10 +96,19 @@ export default function SignupPage() {
       <GlassCard panel className="w-full max-w-md p-8">
         <h1 className="text-2xl font-bold tracking-tight">Create your account</h1>
         <p className="mt-1 text-sm text-muted">{subtitle}</p>
+        {alreadyRegistered && (
+          <div role="alert" className="mt-4 rounded-2xl border border-brand/30 bg-brand-soft/60 p-4 text-sm">
+            <p className="font-semibold text-fg">{phone} already has an account</p>
+            <p className="mt-1 text-muted">Log in with this number instead — we&apos;ll send you a code.</p>
+            <SpecularCTA size="sm" className="mt-3" onClick={() => router.push(`/login?phone=${phone}`)}>
+              Log in instead
+            </SpecularCTA>
+          </div>
+        )}
         {error && <div role="alert" className="mt-4 rounded-2xl bg-red-500/10 px-4 py-3 text-sm text-red-500">{error}</div>}
 
         {step === "done" ? (
-          <SpecularCTA size="md" className="mt-6 w-full justify-center" onClick={() => router.push("/login")}>
+          <SpecularCTA size="md" className="mt-6 w-full justify-center" onClick={() => router.push(`/login?phone=${phone}`)}>
             Log in
           </SpecularCTA>
         ) : (
@@ -94,7 +116,7 @@ export default function SignupPage() {
             {step === "phone" && (
               <div>
                 <Label htmlFor="phone">Phone number</Label>
-                <Input id="phone" inputMode="numeric" maxLength={10} value={phone} onChange={(e) => setPhone(e.target.value.replace(/\D/g, ""))} required autoFocus placeholder="9876543210" />
+                <Input id="phone" inputMode="numeric" maxLength={10} value={phone} onChange={(e) => { setPhone(e.target.value.replace(/\D/g, "")); setAlreadyRegistered(false); }} required autoFocus placeholder="9876543210" />
               </div>
             )}
             {step === "otp" && (
@@ -135,7 +157,7 @@ export default function SignupPage() {
         )}
 
         <p className="mt-5 text-center text-sm text-muted">
-          Already have an account? <Link href="/login" className="font-semibold text-brand hover:underline">Log in</Link>
+          Already have an account? <Link href={PHONE_RE.test(phone) ? `/login?phone=${phone}` : "/login"} className="font-semibold text-brand hover:underline">Log in</Link>
         </p>
       </GlassCard>
     </Container>
