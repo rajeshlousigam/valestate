@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View } from "react-native";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { X } from "lucide-react-native";
 import { BrandMark } from "@/components/BrandLogo";
 import { Screen } from "@/components/ui/Screen";
 import { Input } from "@/components/ui/Input";
 import { SpecularButton } from "@/components/ui/SpecularButton";
-import { PHONE_RE, api } from "@/lib/api";
+import { PHONE_RE, api, isBadOtp, isNotRegistered } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { useTheme } from "@/lib/theme";
 
@@ -18,7 +18,10 @@ export default function Login() {
   const { c } = useTheme();
   const { verifyLogin } = useAuth();
   const [step, setStep] = useState<"phone" | "otp">("phone");
-  const [phone, setPhone] = useState("");
+  const params = useLocalSearchParams<{ phone?: string }>();
+  const [phone, setPhone] = useState(() => (params.phone ?? "").replace(/\D/g, "").slice(0, 10));
+  // Set when the API says this number has no account: offer signup instead.
+  const [notRegistered, setNotRegistered] = useState(false);
   const [otp, setOtp] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -29,12 +32,14 @@ export default function Login() {
     if (!PHONE_RE.test(p)) return setError("Enter your 10-digit phone number.");
     setBusy(true);
     setError(null);
+    setNotRegistered(false);
     try {
       const r = await api.requestLoginOtp(p);
       setInfo(typeof r.msg === "string" ? r.msg : "OTP sent.");
       setStep("otp");
     } catch (e) {
-      setError(errMsg(e, "Could not send the OTP."));
+      if (isNotRegistered(e)) setNotRegistered(true);
+      else setError(errMsg(e, "Could not send the OTP."));
     } finally {
       setBusy(false);
     }
@@ -48,7 +53,11 @@ export default function Login() {
       await verifyLogin(phone.trim(), otp.trim());
       router.back();
     } catch (e) {
-      setError(errMsg(e, "Could not verify the OTP."));
+      setError(
+        isBadOtp(e)
+          ? "That code is wrong or has expired (codes last 3 minutes). Check it, or tap Resend OTP."
+          : errMsg(e, "Could not verify the OTP."),
+      );
     } finally {
       setBusy(false);
     }
@@ -78,12 +87,26 @@ export default function Login() {
                 <Input
                   label="Phone number"
                   value={phone}
-                  onChangeText={(t) => setPhone(t.replace(/\D/g, ""))}
+                  onChangeText={(t) => {
+                    setPhone(t.replace(/\D/g, ""));
+                    setNotRegistered(false);
+                  }}
                   placeholder="9876543210"
                   keyboardType="number-pad"
                   autoComplete="tel"
                   maxLength={10}
                 />
+                {notRegistered ? (
+                  <View className="gap-2 rounded-2xl border border-brand/30 bg-brand-soft/60 p-4" accessibilityRole="alert">
+                    <Text className="font-semibold text-fg">No account for {phone} yet</Text>
+                    <Text className="text-sm text-muted">Create a free account with this number — it only takes a minute.</Text>
+                    <SpecularButton
+                      label="Create an account"
+                      size="sm"
+                      onPress={() => router.replace({ pathname: "/(auth)/signup", params: { phone } })}
+                    />
+                  </View>
+                ) : null}
                 {error ? <Text className="text-sm text-warning">{error}</Text> : null}
                 <SpecularButton label="Send OTP" full loading={busy} onPress={sendOtp} />
               </>
@@ -124,7 +147,7 @@ export default function Login() {
           <View className="flex-1" />
           <View className="flex-row justify-center gap-1 px-6 pb-4">
             <Text className="text-sm text-muted">New here?</Text>
-            <Pressable onPress={() => router.replace("/(auth)/signup")}>
+            <Pressable onPress={() => router.replace({ pathname: "/(auth)/signup", params: PHONE_RE.test(phone) ? { phone } : {} })}>
               <Text className="text-sm font-bold text-brand">Create an account</Text>
             </Pressable>
           </View>

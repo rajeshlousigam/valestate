@@ -246,4 +246,16 @@ export const api = {
 };
 
 export const isBookingMode = (mode?: string) => mode?.toLowerCase() === "booking";
+// ---- auth error classification (messages per docs/Auth API Docs.docx) ----
+const apiMsg = (e: unknown) => (e instanceof ApiError ? e.message : "");
+/** Login OTP requested for a number with no account ("Customer not found."). */
+export const isNotRegistered = (e: unknown) =>
+  e instanceof ApiError &&
+  !/already|otp/i.test(e.message) &&
+  (e.status === 404 || /customer not found|not registered|no (such )?(customer|user|account)|does not exist/i.test(e.message));
+/** Signup / phone change for a number that already has an account. */
+export const isAlreadyRegistered = (e: unknown) => /already registered/i.test(apiMsg(e));
+/** Wrong or expired OTP ("Invalid or expired OTP."). */
+export const isBadOtp = (e: unknown) => /otp/i.test(apiMsg(e)) && /invalid|expired|not found|incorrect|wrong/i.test(apiMsg(e));
+
 export const PHONE_RE = /^\d{10}$/;

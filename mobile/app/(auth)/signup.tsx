@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View } from "react-native";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { X } from "lucide-react-native";
 import { Screen } from "@/components/ui/Screen";
 import { Input } from "@/components/ui/Input";
 import { SpecularButton } from "@/components/ui/SpecularButton";
-import { PHONE_RE, api } from "@/lib/api";
+import { PHONE_RE, api, isAlreadyRegistered, isBadOtp } from "@/lib/api";
 import { useTheme } from "@/lib/theme";
 
 const errMsg = (e: unknown, fallback: string) => (e instanceof Error ? e.message : fallback);
@@ -20,7 +20,10 @@ export default function Signup() {
   const router = useRouter();
   const { c } = useTheme();
   const [step, setStep] = useState<"phone" | "otp" | "profile">("phone");
-  const [phone, setPhone] = useState("");
+  const params = useLocalSearchParams<{ phone?: string }>();
+  const [phone, setPhone] = useState(() => (params.phone ?? "").replace(/\D/g, "").slice(0, 10));
+  // Set when the API says this number already has an account: offer login instead.
+  const [alreadyRegistered, setAlreadyRegistered] = useState(false);
   const [otp, setOtp] = useState("");
   const [signupToken, setSignupToken] = useState("");
   const [name, setName] = useState("");
@@ -33,10 +36,13 @@ export default function Signup() {
   const run = async (fn: () => Promise<void>, fallback: string) => {
     setBusy(true);
     setError(null);
+    setAlreadyRegistered(false);
     try {
       await fn();
     } catch (e) {
-      setError(errMsg(e, fallback));
+      if (isAlreadyRegistered(e)) setAlreadyRegistered(true);
+      else if (isBadOtp(e)) setError("That code is wrong or has expired (codes last 5 minutes). Check it, or request a new one.");
+      else setError(errMsg(e, fallback));
     } finally {
       setBusy(false);
     }
@@ -71,7 +77,7 @@ export default function Signup() {
         email: email.trim() || undefined,
       });
       Alert.alert("Account created", "Log in with your phone number to continue.");
-      router.replace("/(auth)/login");
+      router.replace({ pathname: "/(auth)/login", params: { phone } });
     }, "Could not create your account.");
   };
 
@@ -103,11 +109,25 @@ export default function Signup() {
                 <Input
                   label="Phone number"
                   value={phone}
-                  onChangeText={(t) => setPhone(t.replace(/\D/g, ""))}
+                  onChangeText={(t) => {
+                    setPhone(t.replace(/\D/g, ""));
+                    setAlreadyRegistered(false);
+                  }}
                   placeholder="9876543210"
                   keyboardType="number-pad"
                   maxLength={10}
                 />
+                {alreadyRegistered ? (
+                  <View className="gap-2 rounded-2xl border border-brand/30 bg-brand-soft/60 p-4" accessibilityRole="alert">
+                    <Text className="font-semibold text-fg">{phone} already has an account</Text>
+                    <Text className="text-sm text-muted">Log in with this number instead — we'll send you a code.</Text>
+                    <SpecularButton
+                      label="Log in instead"
+                      size="sm"
+                      onPress={() => router.replace({ pathname: "/(auth)/login", params: { phone } })}
+                    />
+                  </View>
+                ) : null}
                 {error ? <Text className="text-sm text-warning">{error}</Text> : null}
                 <SpecularButton label="Send OTP" full loading={busy} onPress={sendOtp} />
               </>
@@ -154,7 +174,7 @@ export default function Signup() {
 
             <View className="flex-row justify-center gap-1 pt-1">
               <Text className="text-sm text-muted">Already have an account?</Text>
-              <Pressable onPress={() => router.replace("/(auth)/login")}>
+              <Pressable onPress={() => router.replace({ pathname: "/(auth)/login", params: PHONE_RE.test(phone) ? { phone } : {} })}>
                 <Text className="text-sm font-bold text-brand">Log in</Text>
               </Pressable>
             </View>
