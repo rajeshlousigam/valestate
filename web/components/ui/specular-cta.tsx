@@ -2,21 +2,17 @@
 
 import { useRouter } from "next/navigation";
 import type { FC, MouseEvent, ReactNode } from "react";
-import { useTheme } from "@/components/theme/theme-provider";
 import SpecularButtonBase from "./specular-button";
 
 // The ported component is JS (@ts-nocheck); widen its prop type for TS consumers.
 const SpecularButton = SpecularButtonBase as unknown as FC<Record<string, unknown>>;
 
-// The WebGL button takes literal colours, not CSS tokens, so each palette has a preset.
-const PRESETS = {
-  estara: { tint: "#14100a", textColor: "#f1cf74", lineColor: "#e3b341", baseColor: "#0a0805" },
-  classic: { tint: "#0d5647", textColor: "#ffffff", lineColor: "#eab94e", baseColor: "#0a4034" },
-} as const;
+// The WebGL button takes literal colours, not CSS tokens: Estara teal + logo gold.
+const PRESET = { tint: "#1c4955", textColor: "#f6e3a8", lineColor: "#e8c568", baseColor: "#123540" } as const;
 
 /**
- * Brand preset of the React Bits SpecularButton — Estara: logo gold on black;
- * Classic: emerald glass with a gold sweep. Handles link navigation via `href`.
+ * Brand preset of the React Bits SpecularButton — Estara teal glass with a
+ * logo-gold specular sweep. Handles link navigation via `href`.
  */
 export function SpecularCTA({
   children,
@@ -36,19 +32,17 @@ export function SpecularCTA({
   autoAnimate?: boolean;
 }) {
   const router = useRouter();
-  const { palette } = useTheme();
-  const preset = PRESETS[palette];
 
   return (
     <SpecularButton
       size={size}
       type={type}
       radius={16}
-      tint={preset.tint}
+      tint={PRESET.tint}
       tintOpacity={0.94}
-      textColor={preset.textColor}
-      lineColor={preset.lineColor}
-      baseColor={preset.baseColor}
+      textColor={PRESET.textColor}
+      lineColor={PRESET.lineColor}
+      baseColor={PRESET.baseColor}
       intensity={1}
       shineSize={12}
       shineFade={42}

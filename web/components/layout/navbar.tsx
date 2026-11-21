@@ -7,7 +7,6 @@ import { useState } from "react";
 import { useAuth } from "@/components/auth/auth-provider";
 import { Container } from "@/components/ui/primitives";
 import { SpecularCTA } from "@/components/ui/specular-cta";
-import { PalettePicker } from "@/components/theme/palette-picker";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
 import type { NavLink } from "@/lib/nav";
 import { cn } from "@/lib/utils";
@@ -72,7 +71,6 @@ export function Navbar({ purposes }: { purposes: NavLink[] }) {
                 List property
               </SpecularCTA>
             </div>
-            <PalettePicker />
             <ThemeToggle />
             <button
               type="button"

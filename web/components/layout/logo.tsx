@@ -1,10 +1,10 @@
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 
-/** Estara Properties mark: the gold house/towers from the brand logo on its black tile. */
+/** Estara Properties mark: the gold house/towers from the brand logo on its teal tile. */
 export function LogoMark({ className }: { className?: string }) {
   return (
-    <span className={cn("grid h-9 w-9 place-items-center overflow-hidden rounded-xl bg-black ring-1 ring-accent/30", className)}>
+    <span className={cn("grid h-9 w-9 place-items-center overflow-hidden rounded-xl bg-ink ring-1 ring-accent/30", className)}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src="/brand/estara-mark.png" alt="" className="h-[78%] w-[78%] object-contain" />
     </span>

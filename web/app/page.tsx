@@ -36,9 +36,16 @@ export default async function Home() {
 
   return (
     <>
-      {/* ---------- HERO: banner (≈½ screen), then headline + search ---------- */}
+      {/* ---------- HERO: responsive banner (mobile 16:9 / desktop 2.34:1), then headline + search ---------- */}
       {banners.length > 0 && (
-        <HeroBanner slides={banners.map((b) => ({ id: b.id, title: b.title, body: b.body, image: assetUrl("banner", b.image) }))} />
+        <HeroBanner
+          slides={banners.map((b) => ({
+            id: b.id,
+            title: b.title,
+            mobile: assetUrl("banner", b.mob_image),
+            desktop: assetUrl("banner", b.desk_image),
+          }))}
+        />
       )}
       <SkylineDivider className={banners.length > 0 ? "pt-2" : "pt-6"} />
       <section className="pt-4 sm:pt-5">

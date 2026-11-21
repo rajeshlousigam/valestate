@@ -273,5 +273,22 @@ export async function fetchMasters() {
   return { realEstateTypes, propertyTypes, budgets, states, districts };
 }
 
+/**
+ * Every published listing slug (enquiry + booking), for prerendering property
+ * pages. Pages through both lists; a failing list yields what it got so far.
+ */
+export async function fetchAllListingSlugs(maxPages = 50): Promise<string[]> {
+  const slugs = new Set<string>();
+  for (const load of [api.allEnquiry, api.allBooking]) {
+    for (let p = 1; p <= maxPages; p++) {
+      const res = await load(p).catch(() => null);
+      if (!res) break;
+      for (const l of res.data) slugs.add(l.slug);
+      if (!res.pagination.hasMore) break;
+    }
+  }
+  return [...slugs];
+}
+
 export const isBookingMode = (mode?: string) => mode?.toLowerCase() === "booking";
 export const PHONE_RE = /^\d{10}$/;

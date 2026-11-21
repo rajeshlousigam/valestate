@@ -3,26 +3,24 @@
 @tailwind utilities;
 
 /* ============================================================
-   Two palettes × light/dark. Palette = <html data-palette>,
-   mode = <html class="dark">.
-   · Estara (default): logo gold on ivory / near-black.
-   · Classic: Loktak emerald + Kangla gold.
+   Estara palette (from the logo): gold on deep teal #1C4955.
+   Light = ivory surfaces; dark = deep teal-charcoal. Mode = <html class="dark">.
    ============================================================ */
 @layer base {
-  /* ---- Estara · light ---- */
   :root {
     --bg: 40 33% 97%;
     --surface: 0 0% 100%;
-    --fg: 30 14% 10%;
-    --muted: 30 8% 36%;
-    --subtle: 30 6% 50%;
-    --line: 38 20% 85%;
-    --field: 36 16% 66%;
+    --fg: 196 30% 11%;
+    --muted: 196 10% 36%;
+    --subtle: 196 8% 50%;
+    --line: 38 18% 85%;
+    --field: 196 12% 66%;
 
     --brand: 40 74% 36%; /* antique gold */
-    --brand-2: 28 30% 14%; /* bronze-black — gradient partner */
+    --brand-2: 193 50% 22%; /* Estara teal #1C4955 — gradient partner */
     --brand-soft: 43 60% 92%;
     --accent: 44 80% 46%; /* logo gold */
+    --ink: 193 50% 22%; /* logo tile / brand surfaces (constant across modes) */
 
     --success: 152 60% 36%;
     --warning: 24 90% 48%;
@@ -35,78 +33,30 @@
     color-scheme: light;
   }
 
-  /* ---- Estara · dark ---- */
   .dark {
-    --bg: 30 8% 5%;
-    --surface: 30 6% 9%;
-    --fg: 42 35% 93%;
-    --muted: 38 12% 68%;
-    --subtle: 36 8% 50%;
-    --line: 34 10% 18%;
-    --field: 36 12% 36%;
+    --bg: 196 38% 7%;
+    --surface: 195 32% 11%;
+    --fg: 40 30% 94%;
+    --muted: 195 12% 70%;
+    --subtle: 195 10% 52%;
+    --line: 195 22% 19%;
+    --field: 195 16% 34%;
 
-    --brand: 43 72% 50%;
-    --brand-2: 34 70% 32%;
-    --brand-soft: 38 35% 14%;
-    --accent: 45 85% 58%;
+    --brand: 43 72% 52%;
+    --brand-2: 193 45% 30%;
+    --brand-soft: 193 32% 15%;
+    --accent: 44 74% 66%; /* #E8C568 */
+    --ink: 193 50% 22%;
 
     --success: 152 50% 48%;
     --warning: 30 90% 56%;
 
-    --glass-bg: 40 30% 90%;
+    --glass-bg: 195 30% 90%;
     --glass-a: 0.06;
-    --glass-border: 42 40% 96%;
+    --glass-border: 195 40% 96%;
     --glass-border-a: 0.12;
 
     color-scheme: dark;
-  }
-
-  /* ---- Classic · light ---- */
-  [data-palette="classic"] {
-    --bg: 196 28% 97%;
-    --surface: 0 0% 100%;
-    --fg: 200 30% 13%;
-    --muted: 200 14% 36%;
-    --subtle: 200 12% 52%;
-    --line: 200 18% 84%;
-    --field: 200 20% 68%;
-
-    --brand: 170 78% 30%; /* emerald */
-    --brand-2: 190 82% 36%; /* teal */
-    --brand-soft: 174 44% 91%;
-    --accent: 40 84% 45%; /* gold */
-
-    --success: 152 60% 40%;
-    --warning: 32 90% 50%;
-
-    --glass-bg: 0 0% 100%;
-    --glass-a: 0.72;
-    --glass-border: 200 24% 100%;
-    --glass-border-a: 0.9;
-  }
-
-  /* ---- Classic · dark ---- */
-  [data-palette="classic"].dark {
-    --bg: 197 32% 7%;
-    --surface: 198 24% 11%;
-    --fg: 195 22% 96%;
-    --muted: 196 13% 68%;
-    --subtle: 196 11% 52%;
-    --line: 198 20% 22%;
-    --field: 196 15% 40%;
-
-    --brand: 166 72% 47%;
-    --brand-2: 188 78% 52%;
-    --brand-soft: 190 40% 15%;
-    --accent: 42 88% 60%;
-
-    --success: 152 58% 50%;
-    --warning: 38 92% 58%;
-
-    --glass-bg: 197 30% 90%;
-    --glass-a: 0.07;
-    --glass-border: 197 40% 96%;
-    --glass-border-a: 0.14;
   }
 
   * {
@@ -190,6 +140,11 @@
 
   .brand-gradient {
     background-image: linear-gradient(115deg, hsl(var(--brand)), hsl(var(--brand-2)));
+  }
+  /* Dark mode: teal would vanish into the teal-charcoal background, so headline
+     gradient text stays gold → light gold there. */
+  .dark .brand-text {
+    background-image: linear-gradient(115deg, hsl(var(--brand)), hsl(var(--accent)));
   }
   .brand-text {
     background-image: linear-gradient(115deg, hsl(var(--brand)), hsl(var(--brand-2)));

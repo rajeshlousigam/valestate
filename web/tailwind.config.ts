@@ -22,6 +22,7 @@ const config: Config = {
           soft: "hsl(var(--brand-soft) / <alpha-value>)",
         },
         accent: "hsl(var(--accent) / <alpha-value>)",
+        ink: "hsl(var(--ink) / <alpha-value>)",
         aurora1: "hsl(var(--aurora-1) / <alpha-value>)",
         aurora2: "hsl(var(--aurora-2) / <alpha-value>)",
         aurora3: "hsl(var(--aurora-3) / <alpha-value>)",

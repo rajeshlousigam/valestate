@@ -10,11 +10,18 @@ import { TrustPanel } from "@/components/property/trust-panel";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Container } from "@/components/ui/primitives";
 import { VerifiedBadge } from "@/components/ui/verified-badge";
-import { api, assetUrl, isBookingMode } from "@/lib/api";
+import { api, assetUrl, fetchAllListingSlugs, isBookingMode } from "@/lib/api";
 import { costLabel, formatINR, present } from "@/lib/format";
 import type { HowVerify } from "@/lib/types";
 
 export const revalidate = 300;
+
+// Prerender every current listing at build so links can prefetch the full page
+// (instant navigation). New listings render on first visit, then are cached
+// (dynamicParams defaults to true) and refresh every `revalidate` seconds.
+export async function generateStaticParams() {
+  return (await fetchAllListingSlugs()).map((slug) => ({ slug }));
+}
 
 // Deduped between generateMetadata and the page render.
 const getDetail = cache((slug: string) => api.detail(slug));

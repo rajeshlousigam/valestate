@@ -2,18 +2,23 @@
 
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Cover } from "@/components/ui/cover";
+import { cover as coverGradient } from "@/lib/covers";
 import { cn } from "@/lib/utils";
 
-export type Slide = { id: number; title: string; body: string; image?: string };
+/** mobile: 16:9 (1600×900) · desktop: 2.34:1 (1920×820). Either may be missing. */
+export type Slide = { id: number; title: string; mobile?: string; desktop?: string };
+
+// Tablets (≥768px) and up get the wide desktop artwork; phones the 16:9 one.
+const DESKTOP_MQ = "(min-width: 768px)";
 
 const INTERVAL_MS = 5000;
 const SWIPE_PX = 40;
 
 /**
- * Full-bleed hero banner: ~half the viewport tall on desktop, and the image's
- * own 16:9 shape on phones so the whole banner shows uncropped. The search
- * section follows below it (separated by SkylineDivider).
+ * Full-bleed hero banner. The box takes the shape of the artwork it shows, so
+ * nothing is cropped: 16:9 with the mobile image on phones, 1920:820 with the
+ * desktop image from tablets up (capped at 65vh on very large screens, where a
+ * small centred crop applies). <picture> means each device downloads one image.
  *
  * Seamless loop: the track is [last, ...slides, first]; after animating onto
  * a clone we jump (no transition) to the real slide. Pauses on hover/focus,
@@ -71,7 +76,7 @@ export function HeroBanner({ slides }: { slides: Slide[] }) {
     <section
       aria-roledescription="carousel"
       aria-label="Featured"
-      className="group relative aspect-video w-full overflow-hidden sm:aspect-auto sm:h-[50vh] sm:max-h-[560px] sm:min-h-[340px]"
+      className="group relative aspect-video w-full overflow-hidden md:aspect-[1920/820] md:max-h-[65vh]"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
       onFocus={() => setPaused(true)}
@@ -112,15 +117,7 @@ export function HeroBanner({ slides }: { slides: Slide[] }) {
               aria-roledescription="slide"
               aria-label={`${multi ? ((i - 1 + n) % n) + 1 : 1} of ${n}`}
             >
-              <Cover
-                index={s.id}
-                src={s.image}
-                alt={s.title}
-                eager={i === offset}
-                className="h-full w-full"
-                rounded="rounded-none"
-                overlay={false}
-              />
+              <BannerPicture slide={s} />
             </div>
           ))}
         </div>
@@ -169,5 +166,31 @@ function Arrow({ side, onClick }: { side: "left" | "right"; onClick: () => void 
     >
       <Icon className="h-5 w-5 sm:h-6 sm:w-6" />
     </button>
+  );
+}
+
+// Every slide loads eagerly: off-screen slides in the translated track never
+// count as "visible", so lazy-loading would flash the placeholder on each advance.
+function BannerPicture({ slide }: { slide: Slide }) {
+  const [failed, setFailed] = useState(false);
+  const mobile = slide.mobile ?? slide.desktop;
+  const desktop = slide.desktop ?? slide.mobile;
+  return (
+    <div className="absolute inset-0" style={{ backgroundImage: coverGradient(Math.abs(slide.id)) }}>
+      {mobile && !failed && (
+        <picture>
+          {desktop && <source media={DESKTOP_MQ} srcSet={desktop} />}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={mobile}
+            alt={slide.title}
+            loading="eager"
+            decoding="async"
+            onError={() => setFailed(true)}
+            className="h-full w-full object-cover"
+          />
+        </picture>
+      )}
+    </div>
   );
 }

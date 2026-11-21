@@ -37,11 +37,12 @@ export interface Budget {
   real_estate_type_id: Id;
   budget_amount: string;
 }
+/** Hero banner: mob_image is 16:9 (1600×900); desk_image is 2.34:1 (1920×820). */
 export interface Banner {
   id: Id;
   title: string;
-  body: string;
-  image: string;
+  mob_image?: string;
+  desk_image?: string;
 }
 export interface HowVerifyStep {
   id: Id;
